@@ -57,8 +57,14 @@ export const INVULN_MS = 1300;
 
 /** Życia na starcie rundy. */
 export const START_LIVES = 3;
-/** Maksymalna liczba żyć (limit power-upu "life"). */
+/** Maksymalna liczba żyć (limit power-upu "life" i bonusów za punkty). */
 export const MAX_LIVES = 5;
+/** Próg punktowy pierwszego bonusowego życia. */
+export const EXTRA_LIFE_FIRST = 2_000;
+/** Drugi próg — każdy kolejny jest podwojeniem poprzedniego (10k, 20k, 40k...). */
+export const EXTRA_LIFE_SECOND = 5_000;
+/** Mnożnik progu od trzeciego bonusowego życia wzwyż. */
+export const EXTRA_LIFE_GROWTH = 2;
 /** Maksymalny mnożnik combo. */
 export const MAX_COMBO = 8;
 /** Czas (ms), po którym seria zbierań bez straty jajka wygasa. */

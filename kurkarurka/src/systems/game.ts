@@ -17,7 +17,8 @@ import {
   GROUND_H, W, H, PLAYER_R, MOVE_SPEED, JUMP_VELOCITY, STOMP_BOUNCE, KNOCKBACK_X,
   FALL_EXTRA_G, MAX_FALL_SPEED, JUMP_CUT, COYOTE_MS, JUMP_BUFFER_MS,
   MOVE_ACCEL_GROUND, MOVE_ACCEL_AIR, INVULN_MS, LEVEL_CLEAR_PTS,
-  START_LIVES, MAX_LIVES, MAX_COMBO, COMBO_WINDOW_MS, GAMEOVER_DELAY_MS,
+  START_LIVES, MAX_LIVES, EXTRA_LIFE_FIRST, EXTRA_LIFE_SECOND, EXTRA_LIFE_GROWTH,
+  MAX_COMBO, COMBO_WINDOW_MS, GAMEOVER_DELAY_MS,
   MAX_DIFFICULTY, DIFFICULTY_STEP_MS, BOSS_EVERY_LEVELS,
   EGG_MAX, FALLING_MAX, POWERUP_MAX, POWERUP_INTERVAL_MS,
   NIGHTMARE_LEN, FOX_START_DELAY_MS, FOX_KILLS_PER_STEP,
@@ -55,6 +56,8 @@ export class Game {
   private foxStartAt = 0;
   private foxKills = 0;
   private foxWarned = false;
+  /** Próg punktowy kolejnego bonusowego życia (2k, 5k, potem ×2). */
+  private nextLifeAt = EXTRA_LIFE_FIRST;
   /** Bufor skoku — wciśnięcie tuż przed lądowaniem wykona skok po dotknięciu ziemi. */
   private jumpBufferUntil = 0;
   /** Poprzedni stan "trzymanego" skoku — wykrywa puszczenie (cięcie skoku). */
@@ -113,6 +116,7 @@ export class Game {
     this.foxStartAt = now + FOX_START_DELAY_MS;
     this.foxKills = 0;
     this.foxWarned = false;
+    this.nextLifeAt = EXTRA_LIFE_FIRST;
     this.jumpBufferUntil = 0;
     this.prevJumpHeld = false;
     this.input.clear();
@@ -210,6 +214,7 @@ export class Game {
     this.updateParticles();
     this.updatePopups();
     if (!arena) this.checkGoal();
+    this.checkExtraLife();
   }
 
   /**
@@ -430,6 +435,21 @@ export class Game {
     Body.setVelocity(physics.player, { x: kickX, y: -4.5 });
     this.audio.playDeath();
     if (gameState.lives <= 0) this.gameOver();
+  }
+
+  /**
+   * Bonusowe życie za próg punktowy — jeden check na tick łapie punkty
+   * ze wszystkich źródeł (jajka, deptanie, premie za poziom i bossa).
+   * Progi: EXTRA_LIFE_FIRST, EXTRA_LIFE_SECOND, potem ×EXTRA_LIFE_GROWTH.
+   */
+  private checkExtraLife(): void {
+    if (gameState.score < this.nextLifeAt) return;
+    this.nextLifeAt = this.nextLifeAt < EXTRA_LIFE_SECOND
+      ? EXTRA_LIFE_SECOND
+      : this.nextLifeAt * EXTRA_LIFE_GROWTH;
+    gameState.lives = Math.min(MAX_LIVES, gameState.lives + 1);
+    this.factory.addPopup(physics.player.position.x, physics.player.position.y - PLAYER_R, '+1 LIFE', '#00e5ff');
+    this.audio.playPowerUp();
   }
 
   /** Odlicza timer combo i czasy trwania aktywnych efektów power-upów. */
