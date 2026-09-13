@@ -425,11 +425,12 @@ export class SceneRenderer {
       ctx.fillRect(cx + 8, cy - 3, 2, 3);
     }
 
-    // Paski HP dla tanków i bossa
+    // Paski HP dla tanków i bossa — węższe przy dużym HP wilków z aren
     if (d.hp > 1) {
       ctx.fillStyle = '#f83800';
+      const pw = d.hp > 10 ? 3 : 6;
       for (let hp = 0; hp < d.hp - 1; hp++) {
-        ctx.fillRect(x - d.r + hp * 8, y - d.r - 6, 6, 3);
+        ctx.fillRect(x - d.r + hp * (pw + 2), y - d.r - 6, pw, 3);
       }
     }
   }
