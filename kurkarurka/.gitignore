@@ -1,0 +1,22 @@
+# Zależności
+node_modules/
+
+# Wynik kompilacji (generowany przez build.mjs)
+dist/
+
+# Pliki systemowe
+.DS_Store
+Thumbs.db
+
+# Logi
+*.log
+npm-debug.log*
+
+# Zmienne środowiskowe
+.env
+.env.*
+
+# Katalogi edytorów/IDE
+.idea/
+.vscode/
+*.swp

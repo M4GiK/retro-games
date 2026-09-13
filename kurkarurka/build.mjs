@@ -1,0 +1,61 @@
+// Buduje grę do JEDNEGO pliku HTML w dist/ (JS zbundlowany i wstawiony inline).
+//   node build.mjs          -> produkcyjny, zminifikowany: dist/kurnik-physics.html
+//   node build.mjs --watch  -> dev, bez minifikacji + sourcemap: dist/kurnik-dev.html
+import esbuild from 'esbuild';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+
+const watch = process.argv.includes('--watch');
+const dev = watch || process.argv.includes('--dev');
+const outName = dev ? 'kurnik-dev.html' : 'kurnik-physics.html';
+const MARKER = '<!-- GAME_BUNDLE -->';
+// Muzyka osadzana w pliku wynikowym (offline) — mp3 jako data URI.
+const MUSIC_FILE = 'assets/Quarter_in_the_Slot.mp3';
+
+async function writeHtml(js) {
+  let musicSrc = '';
+  try {
+    const mp3 = await readFile(MUSIC_FILE);
+    musicSrc = 'data:audio/mpeg;base64,' + mp3.toString('base64');
+  } catch {
+    console.warn(`[build] brak ${MUSIC_FILE} — zostanie fallback chiptune`);
+  }
+  const html = (await readFile('src/index.html', 'utf8'))
+    .replace('__MUSIC_SRC__', () => musicSrc)
+    .replace(MARKER, () => `<script>\n${js}</script>`);
+  if (html.includes(MARKER)) throw new Error(`Brak znacznika ${MARKER} w src/index.html`);
+  await mkdir('dist', { recursive: true });
+  await writeFile(`dist/${outName}`, html);
+  // index.html = ta sama gra — serwowanie dist/ pokazuje ją od razu na /
+  if (!dev) await writeFile('dist/index.html', html);
+  console.log(`[build] dist/${outName} (${(html.length / 1024).toFixed(0)} KB)`);
+}
+
+const options = {
+  entryPoints: ['src/main.ts'],
+  bundle: true,
+  write: false,
+  format: 'iife',
+  target: 'es2020',
+  minify: !dev,
+  sourcemap: dev ? 'inline' : false,
+  logLevel: 'warning',
+};
+
+if (watch) {
+  const ctx = await esbuild.context({
+    ...options,
+    plugins: [{
+      name: 'inline-html',
+      setup(b) {
+        b.onEnd(async (result) => {
+          if (!result.errors.length) await writeHtml(result.outputFiles[0].text);
+        });
+      },
+    }],
+  });
+  await ctx.watch();
+  console.log('[watch] obserwuję src/ — otwórz dist/kurnik-dev.html w przeglądarce');
+} else {
+  const result = await esbuild.build(options);
+  await writeHtml(result.outputFiles[0].text);
+}

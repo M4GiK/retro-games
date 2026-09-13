@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kurnik - prosta gra</title>
+<style>
+  html, body { height: 100%; margin: 0; overscroll-behavior: none; font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:#f4f8ff; }
+  header { position:sticky; top:0; z-index:10; display:flex; justify-content:space-between; gap:10px; padding:10px; background:#fff; border-bottom:1px solid #e5effa; }
+  .pill { padding:6px 10px; border-radius:999px; background:#eef5ff; border:1px solid #dbe9ff; }
+  label { color:#5b6f8a; font-size:12px; }
+  #stage { position: relative; width:100%; max-width:900px; height: 60vh; min-height:340px; margin: 0 auto; background: linear-gradient(#bfd7fe,#e8f3ff); border:2px solid #cfe1ff; box-sizing: border-box; overflow: hidden; }
+  #player { position:absolute; left:50px; top:50%; width:40px; height:40px; background:#ffd966; border:2px solid #d7a43f; border-radius:50%; box-shadow:0 4px 0 #b8842e; }
+  #player::after { content:"🐔"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .egg { position:absolute; width:22px; height:26px; background:#ffffff; border:2px solid #d3cbb8; border-radius:50%; box-shadow: inset -3px -3px 0 #ece6d7; }
+  .egg.yellow { background:#fff5cc; border-color:#d9c86a; }
+  .enemy { position:absolute; width:50px; height:50px; background:#ff7f7f; border:2px solid #c44; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+  .hud { position: absolute; top:10px; left:50%; transform: translateX(-50%); background: rgba(255,255,255,0.85); padding: 6px 10px; border-radius:10px; }
+  footer { text-align:center; padding:12px; color:#5b6f8a; font-size: 13px; }
+  #start { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); padding: 10px 16px; border-radius:10px; border:1px solid #cfe1ff; background:#fff; cursor:pointer; z-index:3; }
+  #mobileControls{ display:flex; gap:10px; justify-content:space-between; align-items:center; padding:12px env(safe-area-inset-right) calc(12px + env(safe-area-inset-bottom)) env(safe-area-inset-left); background:rgba(255,255,255,0.95); border-top:1px solid #dbe9ff; z-index:20; }
+  #mobileControls button{ user-select:none; -webkit-user-select:none; touch-action:manipulation; width:min(18vw, 64px); height:min(18vw, 64px); font-size:22px; border-radius:14px; border:1px solid #cfe1ff; background:#fff; }
+  #mPause{ font-size:18px; }
+  #mute{ position:absolute; top:10px; right:10px; z-index:4; padding:8px 10px; border-radius:10px; border:1px solid #cfe1ff; background:#fff; }
+</style>
+</head>
+<body>
+<header>
+  <div class="pill"><label>Szybkość kurczaka</label><div id="speedText">Średnia</div></div>
+  <div class="pill"><label>Wynik</label><div id="score">0</div></div>
+  <div class="pill"><label>Przetrwanie</label><div id="lives">❤❤❤</div></div>
+  <div class="pill"><label>Jajka</label><div id="collected">0</div></div>
+</header>
+
+<div id="stage">
+  <div class="hud">Zbieraj jajka 🥚, omijaj lisy 🦊</div>
+  <div id="player"></div>
+  <button id="start">▶️ Starter</button>
+  <button id="mute" aria-label="Mute">🔊</button>
+  <audio id="bgMusic" loop preload="auto">
+    <source src="https://cdn1.suno.ai/05bcf50a-9f61-4cfa-bdaa-313f2800f382.mp3" type="audio/mpeg"/>
+  </audio>
+</div>
+
+<footer>
+  Sterowanie: W/A/S/D lub strzałki | Pauza: P | Wynik +10, życie -1, jajko +1<br/>
+  Mobilnie: dotykowe przyciski poniżej.
+</footer>
+
+<div id="mobileControls">
+  <button id="mLeft">←</button>
+  <button id="mUp">↑</button>
+  <button id="mDown">↓</button>
+  <button id="mRight">→</button>
+  <button id="mPause">⏸</button>
+</div>
+
+<script>
+const stage = document.getElementById('stage');
+const player = document.getElementById('player');
+const startBtn = document.getElementById('start');
+
+const state = {
+  running: false,
+  speed: 2,
+  dy: 0,
+  playerY: 50,
+  collected: 0,
+  lives: 3,
+  score: 0,
+  keys: new Set(),
+  eggs: [],
+  enemies: [],
+  lastSpawn: 0,
+  animationId: null
+};
+
+function updateHUD() {
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('lives').textContent = '❤'.repeat(Math.max(0, state.lives));
+  document.getElementById('collected').textContent = state.collected;
+}
+
+function spawnEgg() {
+  const egg = document.createElement('div');
+  egg.className = 'egg ' + (Math.random() < 0.3 ? 'yellow' : '');
+  const stageH = stage.clientHeight - 90;
+  const maxLeft = Math.max(0, stage.clientWidth - 50);
+  const left = 60 + Math.random() * (maxLeft - 60);
+  const top = 60 + Math.random() * stageH;
+  egg.style.left = left + 'px';
+  egg.style.top = top + 'px';
+  stage.appendChild(egg);
+  state.eggs.push({el: egg, x: left, y: top, dy: 0.4 + Math.random()});
+}
+
+function spawnEnemy() {
+  const enemy = document.createElement('div');
+  enemy.className = 'enemy';
+  enemy.textContent = '🦊';
+  const stageH = stage.clientHeight - 100;
+  const top = 70 + Math.random() * stageH;
+  enemy.style.left = '10px';
+  enemy.style.top = top + 'px';
+  stage.appendChild(enemy);
+  state.enemies.push({el: enemy, x: -60, y: top, dx: 1.8 + Math.random()});
+}
+
+function startGame() {
+  if (state.running) return;
+  state.running = true;
+  state.collected = 0;
+  state.lives = 3;
+  state.score = 0;
+  state.enemies.forEach(e => e.el.remove());
+  state.eggs.forEach(e => e.el.remove());
+  state.enemies = [];
+  state.eggs = [];
+  state.lastSpawn = performance.now();
+  startBtn.textContent = '⏹️ Stop';
+  updateHUD();
+}
+
+function stopGame() {
+  state.running = false;
+  startBtn.textContent = '▶️ Znowu';
+}
+
+startBtn.addEventListener('click', () => {
+  if (state.running) stopGame(); else startGame();
+});
+
+window.addEventListener('keydown', (e) => state.keys.add(e.key.toLowerCase()));
+window.addEventListener('keyup', (e) => state.keys.delete(e.key.toLowerCase()));
+
+function loop(now) {
+  state.animationId = requestAnimationFrame(loop);
+  if (!state.running) return;
+  const stageH = stage.clientHeight - 90;
+
+  if ((state.keys.has('w') || state.keys.has('arrowup')) && state.playerY > 60) state.playerY -= 3;
+  if ((state.keys.has('s') || state.keys.has('arrowdown')) && state.playerY < stageH) state.playerY += 3;
+  if (state.keys.has('a') && player.offsetLeft > 20) player.style.left = (player.offsetLeft - 2.5) + 'px';
+  if (state.keys.has('d') && player.offsetLeft < stage.clientWidth - 70) player.style.left = (player.offsetLeft + 2.5) + 'px';
+
+  player.style.top = state.playerY + 'px';
+
+  if (now - state.lastSpawn > 800 && state.eggs.length < 8) { spawnEgg(); state.lastSpawn = now; }
+  if (now % 1600 < 17) spawnEnemy();
+
+  state.eggs = state.eggs.filter(o => {
+    o.y += o.dy; o.el.style.top = o.y + 'px';
+    const collides = Math.abs(o.x - player.offsetLeft) < 34 && Math.abs(o.y - state.playerY) < 40;
+    if (collides) { o.el.remove(); state.collected += 1; state.score += 10; updateHUD(); return false; }
+    if (o.y > stageH + 30) { o.el.remove(); return false; }
+    return true;
+  });
+
+  state.enemies = state.enemies.filter(o => {
+    o.x += o.dx; o.el.style.left = o.x + 'px';
+    const hit = Math.abs(o.x + 25 - (player.offsetLeft + 20)) < 32 && Math.abs(o.y - state.playerY) < 40;
+    if (hit) { o.el.remove(); state.lives -= 1; updateHUD(); if (state.lives <= 0) stopGame(); return false; }
+    if (o.x > stage.clientWidth + 90) { o.el.remove(); return false; }
+    return true;
+  });
+}
+
+state.animationId = requestAnimationFrame(loop);
+
+(function(){
+  const music = document.getElementById('bgMusic');
+  let muted = false;
+
+  const tryPlay = async () => {
+    try {
+      await music.play();
+    } catch {
+      // ignore autoplay restrictions
+    }
+  };
+
+  startBtn.addEventListener('click', () => {
+    tryPlay();
+  });
+
+  const muteBtn = document.getElementById('mute');
+  if (muteBtn){
+    muteBtn.addEventListener('click', async () => {
+      muted = !muted;
+      music.muted = muted;
+      muteBtn.textContent = muted ? '🔇' : '🔊';
+      if (!muted) await tryPlay();
+    });
+  }
+
+  const map = {mUp:'arrowup', mDown:'arrowdown', mLeft:'a', mRight:'d'};
+  const press = (id, on) => on ? state.keys.add(map[id]) : state.keys.delete(map[id]);
+  Object.entries(map).forEach(([id])=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    const down = e => { e.preventDefault(); press(id, true); };
+    const up = e => { e.preventDefault(); press(id, false); };
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointerleave', up);
+    el.addEventListener('pointercancel', up);
+  });
+
+  const mp = document.getElementById('mPause');
+  if (mp){
+    mp.addEventListener('click', e => { e.preventDefault(); if (state.running) stopGame(); else startGame(); });
+  }
+})();
+</script>
+</body>
+</html>

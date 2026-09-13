@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kurkarurka</title>
+<style>
+@font-face{font-family:'Press Start 2P';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,d09GMgABAAAAAA54AA0AAAAANrQAAA4kAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYcKAZgAINeEQgKz0i7JAuCJAABNgIkA4Q6BCAFhEoHil0bgipVRoaNAwDU3YPg/2/JyRG1vMrgrwiCY25BqlKK6+q6opTtgYhL6ZMSbdqimsBMCEI0b5BLXF5ZMP4f3sFp0YaJN0SvojHRD/d78MaasWnz1cz24Pld8Pz//uj3eRg5AUyTICShm19YHYoUEvHmTtpmHskjXhNSKi4TbuEJYuHy+cfXLnOv09RxKmPANQgOPoBOweb+UNEaom0P0qGoEuAOZOL0/tcYVk+i46Iiomaq6gzzftBd9zsl69rhG3VjjCvEQAok+O9b8qtQyO9AhihciMpy/Jgp08/UFQbJ8RiLFCHtTpsu029D3vFM9xq6u/3RbXhl5lP7cSuVv6b20pUt/dTOeudyOmwsNITY+3b1stLKmi+55Kwrva3OmZN9Nxnbl45KhZfAsN9ROmyNdoArgGHoAPwhLJAEUJD9/fL7g87gbM6tpRgiUkSMNHKjb1n/9l8dAjgBAMJiGjo6AjgQbosmO9cbBa5h3gE2AAwApQQY+geuggnaEqsHUGQeUxo4yykAJjf3t+UTZjX8Cf4g8O8HAPoH9gUC6wDaR6gUSPswgPYyL1rkLJ1cGoqH6BITzv2385NEyZcKaZZxWWM+2hE7b5ftvj11CQwM3H733AP3aOrc75ZIshRKtbQlvZMXNU7Ytob6oV6rF9x8oYXPWNetC2DttHZbi180wPPrz68+P484HzLct11O8AiEupPFCSyG3X8BYJJFRyZINpEcRvKYyGcgl5kCFgo5+FkpYqeEU4CNYlNCXIJmREwLmxMzK2pF2pKkBXHLUhbNS1iV4ZaVg+R5FK0pWIdtKNkk2WYJgZRhFUwdUUXVcA1Si9CktFldBqV1eDKHaYaynkhRDSSqoq8bGcamZxPbs1xHwH0rLDdnkkClDACsBkjwA6QAOC2CyyAAwAsAdACAgRMYxAbSe+CvCqPmGszziDsREjrsbHoDAhoMlTQ1Be4BmoWERjICYCqbwiGmwDSqyE5N8bnAzCdLXzTbwyBu9i929rYc4P5/wGkug9cYGF4TUI0L3WGabwjP33UCjEhDpOo4m/2Vfk0rYr8xvNoXmHtoc6IFHcnAa87HaLtouZBxD1Ah7LyjidBwecXc4nPgGLCTSrQo4xoQEHLS6eqQNZwOxdaUN2eLuUSaPymBL9rsZzUQwBHKVjzaCg/z9JcTwxeW3SHH0ZwwwPbDqLyzOlauyzsKaWJOiE9J7VmyI10UC0ImE4maHPgEHaFDFlGvYlrCe/GukFsUZgSJ0Q5B7C5BZ5INCLwdO0mOrSJfVUHEaKR9n1MfhVuP6oVtwBbrZEGez9+UO46Rni2FtW3N2yCQNW4LiUJ30cCyRQZGFE3ouZ9tw34nAy12JzLfjmhbH8+2ze4tW5Dkmh2+ecLR/GElqCA0xVIcZMTpEY5B/4u5KtTilfRuXuztyoIi2eFldnwj4IUZwCmroSDRxBmAYoGE6CwWWJ2BgMwVOxikB0wQ246kSr1kU9DcPlT6GwjVEmEkMrabgo4XE8IH2FY0bOcRsiV/jJ1VRWHfhQBBlDdDnHhNVny2CKeSEpvD4CzYGiIb6UVOu9K4iUlkK9O8wkNh8ZmPEQhKexyV90AsWOpWaVSeYcCb90AtKydwteu8vFcapwNTZ55hQkUrHwmEcrBuoD4SxxBHO7powUGs3rGOAiGFHIYJhIzpgGHzKB9n4MTlRyWMV/6splsvmCyCEin8yyb3fKgEpMX/anV0s7O2aGy1cmpNW+1RTi2pGZoqKmu0cxNyb7mqVqC0NMXhVEK/k2yZ27rFRTSv+dsxRe7vLGx77EIOOfUU57iYSVWuyjk5SYDBZYUl5XeW1KNVLQh6gSwhNrYBIyczmrCl2Pv8Zr8CEKbcE88PctOqGVvw8U7rmolYdpCBNKoJAlKhFwDoFdFS0KFWDiq671We0FkUTopzzAkkNqLCdkKlwmVbXOemxFbAhxn4BAvwhWEgTtVLIbeDD/HiOf2QFYDsYKwSu+MKhiXaVpFJer8od4DBTvNxoH2oOlwTcwIvwUK3ShCnGLHXswvC4pv/6dbSJsssRgo4Ba2LHArP/D0U3EGV+nysgMyQ7PFnxE8uYXn73TFVafLNiAywCQHuLsGFHS+cSTJSLeUKSTxLXEaQ9UhCuaM1arCyA4q4JEZf6JxAjn3OwKW0ywYcdwpJtzeHdLHvNJsKnTtNYv00AbIfsDw1lz57QLKfxCHXwLww4wKHzARlSfed7BGzrFVv5bt66O1G+5piRpft7YZWo9Q85OsbHgqzUzZQDlOWKewmh3i5HX8yiYbQUw+F3nQ3if0ASOqqKfhOXeRYQYl1/QjLBQaF2nXrx9y0xPmO2XjNtAyk0Lu3P1aTM5yCh2Hxwot7DTvgwL/YUtSkjHVaLdKA7kQYM36Stz2Jz8DuqWh8D948MnLMYw2pERYQN5sCzgJqyarXMjcHUdy+/UByXb3kDj2mA/F81yYXsas1y2epAVRh4pknYA+MAcy65mbMxK6HgGX3Ed6IxiduhPXHOeEOd7sPzLgeEZquIP2Qt7zJj3JeG1UC1FlCEpqqmsy/apM0TXKkUYwiduML7DuvPCDcckW1Pd/dQ1hOS+5rc6OX4MixoFmulUQVCI8g0lkUxU34FZA0bWLeRG0ReTNIGBxMOORhSS0UzJHhacshDgEhELQxdWx6eoamSzdWxi9gtsTrn4ww2xwyFYgqeAClAEus2tK9rAOCchGv85feVUKm15K9ZSxawDrAVF4wWC4FkMkXX8ypQ3VUHZ7NXhFy4bmCbG2h+sawmXSyne05g9qv2ykp1yY9WDimWRn6mIL8dJI5zwmn7YtEAxnTyAdX5ch9fV0HUgFeAIYjYwXvOUvl2QCuiVUOyhHXUNY1w9h497VRvjs4MO3PaSBL/X0qfObwCUzm6jg+KsVgtALywImLFlCLdRzIDvyoja1lPBuvH9sID2Fh8sC4BZbIV1v0gGC9rosnkOb27FR3hOw/qV0NCe1Wf3K3AxxfrT0KwaeFbmJ5nTGMx8aRyBgx3r/cXktfndIoxGZhNozfFqQKUizBLcZNqTN3U7yH5UUzOuRiKdyAxdpPb1ebdzSaisFj9SAgiCK6wUxRnK/tyYOsyEdC0Ylm7p/1rff5bi3xHMMmF8emF/MYTSXzGmK0a1IWD9iod2SAdlyn1OIkIC53lMj0nQPBSMnbyFWWV/5yTvqY74gWGAI+/hqO6nJi6aJSpiquwMpCcxzdsm2ss0rmEUs2NKOygrGkKVbyMlcuN1xHSclCsl5+2737wHoT01qVp73rZ2Z9ZuE+wzhR680mtUxWj9irzmslRv+p6xSoa6MGZW06dmEvyajxXpfU7oA8djf6C5Pk0KPU61qOa8c1z0MAHY6eQHixp1VEbgns68T6Ec2WRtKrkV9h+AO4kI6SvgWapk6zAK+SrUFx5ldalliuBBEvApAh6739hYKsYHCj1xzHv3gy1gkmE/oHkCdXofbdsJzugxa1dL4HLcTYHf7G/Tb5XHJ3usHhVc+kezxAgkLPoKMZW2wT1OMTioxmWY50LwgtwMhTGOcVtXNO/TRyajv1007pp5tL1+TU543Ltv05H0+0cq2HdVEHiWz2HpHB/mvthlMIMNI/Lgs0hZ7/6D80EMHflaEgPBYx0XvGdcFBIxpqWA4HxPtphvbBZcopouzHyeG6WsvW+Ooplr4Y1Uzp6KjVlOLx2j6xS3Fn2pasvpS9xyBdgAYaUTHJ0m0dXrL4XWJsHTcnCh9Xh8Evyx58uOkHXf+AgDvP0M3x4+un//f+/whC12qL5k3t1EijwEZuqTdiGSRB7t3hnVIuZvPjPWH8Xs/9zmLbqE3K8VklKssuza0irNdYn/8GjN4iIIhNAFZLYSGUiPAWunezo4MWMeyBR+Jgu0Lw9X+FhgsvrtBJ9XuFQSz1ChNv2StsiHQhXPQAoAsfXNJ153iiTMLU7YK3Zx2RRcsUFBRV3IEDvngFMYSsP34EhzHcmaBDYUSVotUMxREs1KGoDuTckZPBum9x1DiouxO03vu35t67lLBP96mo1vLjT31HdQ1oaKmqwU0nTo0mJAoQUnYgjppKNRAS2PRKUXaNRvAUO/BSqmzgxZAcjYibjloOxe06gPTUvRkhjkymUNuhMuSrpTGG/LB2atv3dF0eGm4eVe2V7LOthmho6NsZppWVErbjcv965//bT7/RXgwWhyf0l0giU6g0OoPZK24Wm8Pl8QVCkbg3/ZNIZXKFEgBVao22w65659pgNLUAkc9ihfrtDgDsjxtG0BgsDk8gksgUKo3O6LUoi83h8vgCoUjc2/77pTK5QqlSa7Q6vcHYe22zpa26NrujKdzl9nh9SPzUSzwP2fJ6IcgZUYkIJiwx2hHBUqUd0jSjv5qG9U8A6jehknIU/ROIHRAXGJ25T3/owhySEOkGRosm4p4XSVCDmJiChfnrVLCuaGJ8d9OxOWZmdsKwhuMht0iD07n0+O5nvVUmZj64WXgcipnq4gSK6dVaRJd2nVhSnC7rslmeoiVzFSrRx1mVVulU+2VKu4UVLiqp5KAeQtcr9OcnjRqzsbypOjPHDJo+hxGvuX5yBk/Kek6q5Vpr1S1fb/05y/QUtmKTU2P2bAH0v9SY/DLJbOOMTM9qzUVRTYVeymo/9cpUGZVRmZuUxtQkWlMbwO7TiKbrxU4Znd6Ze/MQWIY/U8n/xwiaJTjSr48VY2kToz7rc8qsVfqSuhiLvut7yq4fpsPW/0nOkqw7C5xynntRV+plXMaVvPTL/Jg//T/hh1ilkxOY5Ez/Trsa49GH3PmmNv7pjc2O1baLtkvGjKiFYXLXbZ52j8ZlnwA=) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Press Start 2P';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,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) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;image-rendering:pixelated}
+html,body{height:100%;margin:0;background:#000;font-family:'Press Start 2P','Courier New',monospace;overscroll-behavior:none;color:#f4f4f4}
+/* Cały viewport = ekran konsoli. Obraz gry (256x240) letterboxowany na środku,
+   a winieta CRT przyciemnia krawędzie jak szkło kineskopu. */
+#stage{position:fixed;inset:0;background:#000;overflow:hidden;touch-action:none;user-select:none;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#stage::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:5;
+  box-shadow:inset 0 0 90px rgba(0,0,0,.55),inset 0 0 8px rgba(0,0,0,.9)}
+canvas{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges}
+#mute{position:absolute;top:10px;right:10px;z-index:7;padding:8px 12px;border:2px solid #000;background:#00e5ff;color:#000;font-size:16px;font-weight:700;cursor:pointer;box-shadow:4px 4px 0 #fff}
+/* Wymuś orientację poziomą na telefonie — gra jak na konsoli */
+#rotate{display:none;position:fixed;inset:0;z-index:30;background:#060612;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:24px}
+#rotate p{font-size:12px;color:#ffcc00;letter-spacing:2px;margin:0}
+#rotate .sub{font-size:7px;color:#7fa0c8;line-height:2}
+#rotate .phone{width:34px;height:56px;border:4px solid #fcfcfc;position:relative;animation:rotPhone 1.4s steps(2,end) infinite}
+#rotate .phone::after{content:'';position:absolute;left:50%;bottom:4px;width:8px;height:8px;margin-left:-4px;background:#fcfcfc}
+@keyframes rotPhone{0%{transform:rotate(0)}50%,100%{transform:rotate(90deg)}}
+@media (orientation:portrait) and (pointer:coarse){ #rotate{display:flex} }
+/* Ekranowy gamepad — widoczny tylko na urządzeniach dotykowych (body.touch) */
+#pad{position:absolute;left:0;right:0;bottom:0;z-index:4;display:none;justify-content:space-between;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));pointer-events:none}
+body.touch #pad{display:flex}
+.pad-cluster{display:flex;gap:12px}
+#pad button{pointer-events:auto;width:60px;height:60px;font-size:24px;font-family:inherit;border:3px solid #00e5ff;background:rgba(26,28,44,.72);color:#ffcc00;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:3px 3px 0 #000;cursor:pointer;padding:0}
+#pad button.is-down{background:#00e5ff;color:#000;transform:translate(3px,3px);box-shadow:0 0 0 #000}
+#padJump{width:80px;height:80px;font-size:32px;border-color:#ffcc00}
+/* ---- Ekrany NES ---- */
+.screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(10,10,20,.88);z-index:6;padding:24px;text-align:center}
+.screen.show{display:flex}
+/* półprzezroczyste — demo w tle prześwituje; checkerboard = dithering */
+.screen.ghost{background:rgba(22,15,38,.45)}
+.screen.ghost::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(rgba(0,0,0,.16) 0% 25%, transparent 0% 50%);
+  background-size:4px 4px}
+.screen h1,.screen h2{margin:0;font-size:20px;line-height:1.6;color:#ffcc00;text-shadow:4px 4px 0 #ff0055}
+.screen .lore{color:#f4d9a3;font-size:9px;line-height:2;max-width:520px}
+.screen .hint{color:#7fa0c8;font-size:7px;line-height:1.8}
+.screen button{padding:14px 22px;border:3px solid #000;background:#ffcc00;color:#000;font-weight:700;font-size:10px;cursor:pointer;box-shadow:4px 4px 0 #fff;font-family:inherit}
+.screen button:active{transform:translate(4px,4px);box-shadow:0 0 0 #fff}
+/* splash M4GIK — pełny ekran, animacja CRT na własnym canvasie */
+#splash{background:#000;padding:0;cursor:pointer}
+#splashFx{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:contain;image-rendering:pixelated}
+/* boot — demo prześwituje spod ciemnej maski */
+#boot{background:rgba(0,0,0,.72);gap:22px}
+#boot::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(rgba(0,0,0,.25) 0% 25%, transparent 0% 50%);
+  background-size:4px 4px}
+#boot .boot-logo,#boot .boot-bar,#boot .hint{position:relative}
+.boot-logo{font-size:clamp(16px,4.5vw,26px);color:#fcfcfc;letter-spacing:4px;animation:bootpop .45s steps(5) both}
+.boot-logo span{color:#ffcc00}
+.boot-bar{width:min(220px,60%);height:16px;border:3px solid #fcfcfc;padding:2px}
+#bootFill{height:100%;width:0;background:#f83800;animation:bootfill 1.8s steps(18) forwards}
+@keyframes bootfill{to{width:100%}}
+@keyframes bootpop{from{transform:scale(2.2);opacity:0}to{transform:scale(1);opacity:1}}
+/* tytuł */
+.logo{font-size:clamp(22px,7vw,40px);line-height:1.15;color:#ffcc00;text-shadow:4px 4px 0 #f83800,8px 8px 0 #000;letter-spacing:3px;margin:0}
+.logo small{display:block;font-size:.42em;color:#f87858;letter-spacing:6px;margin-top:14px}
+.press{color:#fcfcfc;font-size:9px;letter-spacing:2px}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+/* menu — pikselowe ramki wokół wyboru */
+#menuList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+#menuList li{font-size:clamp(10px,3vw,14px);color:#fcfcfc;padding:8px 20px;cursor:pointer;letter-spacing:2px;border:3px solid transparent}
+#menuList li.sel{color:#ffcc00;text-shadow:2px 2px 0 #f83800;border-color:#00e5ff;background:rgba(26,28,44,.8);box-shadow:4px 4px 0 #000}
+#menuList li.sel::before{content:'▶ '}
+/* ranking */
+#rankList{list-style:none;margin:0;padding:0;min-width:min(300px,70vw)}
+#rankList li{display:flex;justify-content:space-between;gap:16px;font-size:8px;line-height:2;color:#fcfcfc;padding:4px 2px;border-bottom:1px dashed rgba(255,255,255,.15)}
+#rankList li b{color:#ffcc00}
+#rankList li .m{color:#f87858}
+#rankList .empty{justify-content:center;color:#7fa0c8}
+/* wpis rekordu */
+#hsName{display:flex;gap:10px}
+.hsLet{font-size:clamp(20px,7vw,32px);color:#fcfcfc;border-bottom:4px solid transparent;padding:0 8px;cursor:pointer;line-height:1.1}
+.hsLet.cur{color:#ffcc00;border-color:#ffcc00;animation:blink .8s steps(2) infinite}
+.hsScore{font-size:14px;color:#00e5ff}
+</style>
+</head>
+<body>
+<div id="rotate"><div class="phone"></div><p>OBRÓĆ TELEFON</p><p class="sub">KURKARURKA GRA SIĘ W POZIOMIE</p></div>
+<div id="stage">
+  <button id="mute">🔊</button>
+  <div id="pad">
+    <div class="pad-cluster">
+      <button id="padLeft" aria-label="Lewo">◀</button>
+      <button id="padRight" aria-label="Prawo">▶</button>
+    </div>
+    <button id="padJump" aria-label="Skok">⤒</button>
+  </div>
+
+  <div id="splash" class="screen show">
+    <canvas id="splashFx" width="256" height="240"></canvas>
+  </div>
+
+  <div id="boot" class="screen">
+    <div class="boot-logo">KURKA<span>RURKA</span></div>
+    <div class="boot-bar"><div id="bootFill"></div></div>
+    <p class="hint">ŁADOWANIE...</p>
+  </div>
+
+  <div id="title" class="screen ghost">
+    <h1 class="logo">KURKA<small>RURKA</small></h1>
+    <p class="press blink">▶ NACIŚNIJ START ◀</p>
+    <p class="hint">© 2026 M4GiK SOFT</p>
+  </div>
+
+  <div id="menu" class="screen ghost">
+    <h2>MENU</h2>
+    <ul id="menuList">
+      <li data-mode="normal" class="sel">PRZYGODA</li>
+      <li data-mode="hard">KOSZMAR</li>
+      <li data-mode="rank">RANKING</li>
+    </ul>
+    <p class="hint">↑↓ wybór · Enter start</p>
+  </div>
+
+  <div id="rank" class="screen ghost">
+    <h2>RANKING</h2>
+    <ol id="rankList"></ol>
+    <p class="hint">Enter / dotknij — powrót</p>
+  </div>
+
+  <div id="hs" class="screen ghost">
+    <h2>REKORD!</h2>
+    <p class="hsScore" id="hsScore">0</p>
+    <p class="lore">Wpisz inicjały:</p>
+    <div id="hsName">
+      <span class="hsLet cur">A</span><span class="hsLet">A</span><span class="hsLet">A</span>
+    </div>
+    <p class="hint">↑↓ litera · ←→ pozycja · Enter OK · tap = zmień</p>
+    <button id="hsOk">OK</button>
+  </div>
+
+  <div id="over" class="screen">
+    <h2>Koniec gry</h2>
+    <p id="overText">Twój wynik: 0</p>
+    <p class="lore">Lisy odebrały ostatnie jajko... ale Robcio nigdy się nie poddaje.</p>
+    <button id="retry">Jeszcze raz</button>
+    <button id="toTitle">Menu</button>
+  </div>
+  <audio id="bgMusic" loop preload="auto">
+    <source src="__MUSIC_SRC__" type="audio/mpeg"/>
+  </audio>
+</div>
+
+<!-- GAME_BUNDLE -->
+</body>
+</html>

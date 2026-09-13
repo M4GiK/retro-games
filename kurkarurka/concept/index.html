@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kurka vs Lisy</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div class="pill"><label>Wynik</label><div id="score">0</div></div>
+  <div class="pill"><label>Życia</label><div id="lives">❤❤❤</div></div>
+  <div class="pill"><label>Jajka</label><div id="collected">0</div></div>
+  <div class="pill"><label>Combo</label><div id="combo">x1</div></div>
+</header>
+<div id="stage">
+  <div class="hud">Zbieraj jajka 🥚, skacz nad lisami 🦊</div>
+  <div class="sectors"><div></div><div></div><div></div></div>
+  <div class="touch-hint">Lewo · Skok · Prawo</div>
+
+  <div id="intro" class="screen show">
+    <h1>Kurka vs Lisy</h1>
+    <p class="lore">
+      Gdzieś na dalekiej wiosce żyła sobie kurka o imieniu Robcio.<br/>
+      Pewnego dnia złodziejskie lisy napadły na kurnik i zaczęły kraść jajka.<br/>
+      Tylko Ty możesz pomóc Robciowi uratować jajka,<br/>
+      zdeptać lisów i pokonać wielkiego lisa-bossa.
+    </p>
+    <p class="hint">A/D lub strzałki — ruch · W/↑/Spacja — skok</p>
+    <button id="startIntro">▶️ Zacznij przygodę</button>
+  </div>
+
+  <button id="start">▶️ Start</button>
+  <button id="mute">🔊</button>
+
+  <div id="over" class="screen">
+    <h2>Koniec gry</h2>
+    <p id="overText">Twój wynik: 0</p>
+    <p class="lore">Lisy odebrały ostatnie jajko... ale Robcio nigdy się nie poddaje.</p>
+    <button id="retry">Zagraj jeszcze</button>
+  </div>
+</div>
+<footer>
+  🖥️ <b>A/D</b> lub <b>←/→</b> — ruch &nbsp;·&nbsp; <b>W</b>, <b>↑</b> lub <b>Spacja</b> — skok<br/>
+  📱 Telefon: dotknij <b>lewy</b> / <b>prawy</b> sektor — ruch, <b>środek</b> — skok
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+<script type="module" src="/main.js"></script>
+</body>
+</html>
