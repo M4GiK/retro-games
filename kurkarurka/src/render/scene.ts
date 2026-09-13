@@ -431,9 +431,12 @@ export class SceneRenderer {
    */
   private drawEnemy(ctx: CanvasRenderingContext2D, e: Matter.Body): void {
     const d = e.gameData as EnemyData;
+    const telegraph = d.type === 'boss' && d.bossPhase === 'telegraph';
     const px = d.r >= 24 ? 3 : 2;
     const bob = d.onGround ? Math.round(Math.sin(d.walkPhase) * 1) : 0;
-    const pal: Palette = { ...shadePal(FOX_PAL, this.dl), D: shade(d.color, this.dl) };
+    // Pulsowanie przed szarżą — sierść błyska na biało.
+    const fur = telegraph && Math.floor(now() / 90) % 2 === 0 ? '#fcfcfc' : d.color;
+    const pal: Palette = { ...shadePal(FOX_PAL, this.dl), D: shade(fur, this.dl) };
 
     const x = Math.round(e.position.x);
     const y = Math.round(e.position.y) + bob;
@@ -454,6 +457,26 @@ export class SceneRenderer {
       ctx.fillRect(cx, cy - 3, 2, 3);
       ctx.fillRect(cx + 4, cy - 3, 2, 3);
       ctx.fillRect(cx + 8, cy - 3, 2, 3);
+    }
+
+    // Szarża — wilk pulsuje: czerwona ramka ostrzeżenia rośnie i kurczy się.
+    if (telegraph) {
+      const rr = d.r + 4 + Math.round(Math.abs(Math.sin(now() * 0.018)) * 8);
+      ctx.fillStyle = shade('#f83800', this.dl);
+      for (const [cx, cy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        ctx.fillRect(x + cx * rr - 2, y + cy * rr - 2, 4, 1);
+        ctx.fillRect(x + cx * rr - 2, y + cy * rr - 2, 1, 4);
+      }
+    }
+
+    // Odpoczynek po szarży — gwiazdki nad głową zdradzają otępienie.
+    if (d.type === 'boss' && d.bossPhase === 'recover') {
+      ctx.fillStyle = shade('#f8f878', this.dl);
+      const a0 = now() * 0.006;
+      for (let i = 0; i < 3; i++) {
+        const a = a0 + i * 2.1;
+        ctx.fillRect(Math.round(x + Math.cos(a) * 10), Math.round(y - d.r - 6 + Math.sin(a) * 3), 2, 2);
+      }
     }
 
     // Paski HP dla tanków i bossa — węższe przy dużym HP wilków z aren

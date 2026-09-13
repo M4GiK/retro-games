@@ -24,6 +24,7 @@ import {
   NIGHTMARE_LEN, FOX_START_DELAY_MS, FOX_KILLS_PER_STEP,
   BOSS_LEVEL_EVERY, BOSS_FALLING_MS, BOSS_FALLING_STEP_MS,
   BOSS_EGG_MS, BOSS_CLEAR_PTS, BOSS_CLEAR_DELAY_MS,
+  BOSS_TELEGRAPH_MS, BOSS_DASH_SPEED, BOSS_RECOVER_MS, BOSS_STALK_MS,
 } from '../core/config';
 import { gameState, activeEffects, eggs, enemies, fallingObstacles, powerups, particles, popups, grounds, platforms, levelState, ghost } from '../core/state';
 import { physics } from '../engine/physics';
@@ -634,8 +635,8 @@ export class Game {
 
   /**
    * Wrogowie (lisy): detekcja ziemi, AI skoczka doskakującego do gracza,
-   * atak bossa (zrzut przeszkód), marsz w lewo z modyfikatorami efektów,
-   * a na końcu rozstrzygnięcie kolizji z graczem:
+   * maszyna stanów wilka-bossa (updateBoss), marsz w lewo z modyfikatorami
+   * efektów, a na końcu rozstrzygnięcie kolizji z graczem:
    *  - skok na łeb = punkty i obrażenie wroga,
    *  - aktywna tarcza = amortyzuje trafienie,
    *  - w przeciwnym razie strata życia + odrzut.
@@ -663,16 +664,14 @@ export class Game {
         }
       }
 
-      // Atak bossa: zrzut przeszkody celowanej w okolice gracza
-      if (ed.type === 'boss' && now > ed.nextAttack) {
-        this.factory.spawnFallingObstacle(player.position.x + (Math.random() - 0.5) * 70);
-        ed.nextAttack = now + ed.attackMs;
-      }
-
-      // Ruch — skoczek steruje sobą tylko w powietrzu, reszta maszeruje
-      // w kierunku dirX i zawraca na granicach patrolu; na arenie liski
-      // i wilk gonią gracza; slowTime zwalnia, dasher przyspiesza.
-      if (ed.type !== 'jumper' || eOnGround) {
+      // Wilk-boss ma własną maszynę stanów (marsz → pulsowanie → szarża
+      // → odpoczynek) zamiast prostego gonienia — patrz updateBoss.
+      // Ruch reszty: skoczek steruje sobą tylko w powietrzu, pozostali
+      // maszerują w kierunku dirX i zawracają na granicach patrolu; na
+      // arenie liski gonią gracza; slowTime zwalnia, dasher przyspiesza.
+      if (ed.type === 'boss') {
+        this.updateBoss(o, ed, player, now, eOnGround);
+      } else if (ed.type !== 'jumper' || eOnGround) {
         if (o.position.x <= ed.patrolMin) ed.dirX = 1;
         else if (o.position.x >= ed.patrolMax) ed.dirX = -1;
         else if (this.arena && Math.abs(player.position.x - o.position.x) > 4) {
@@ -726,8 +725,9 @@ export class Game {
           if (ed.type !== 'tank' && ed.type !== 'boss') {
             Composite.remove(physics.engine.world, o);
             enemies.splice(i, 1);
-          } else {
-            // Tank i boss nie giną od kontaktu — tylko się odbijają
+          } else if (ed.type !== 'boss' || ed.bossPhase !== 'dash') {
+            // Tank i boss nie giną od kontaktu — tylko się odbijają;
+            // szarżący wilk jest nie do zatrzymania i leci dalej.
             Body.setVelocity(o, { x: -ed.dirX * ed.speed, y: -4 });
             ed.dirX = -ed.dirX;
           }
@@ -742,6 +742,88 @@ export class Game {
         }
         Composite.remove(physics.engine.world, o);
         enemies.splice(i, 1);
+      }
+    }
+  }
+
+  /**
+   * Wilk-boss — automat skończony zamiast ciągłego gonienia kurki:
+   *  - walk:      marsz z "zapamiętanym" kierunkiem — wilk poprawia cel
+   *               dopiero co BOSS_STALK_MS, więc przestrzeliwuje uciekającą
+   *               kurkę; tylko w tej fazie zrzuca przeszkody,
+   *  - telegraph: stoi i pulsuje (renderer błyska) przez BOSS_TELEGRAPH_MS,
+   *               patrząc na gracza — zdradza stronę nadchodzącej szarży,
+   *  - dash:      szarża z prędkością BOSS_DASH_SPEED aż do krawędzi areny
+   *               (szlak kurzu, szybsza animacja nóg),
+   *  - recover:   odpoczynek BOSS_RECOVER_MS po uderzeniu w krawędź —
+   *               okno na kontratak, potem powrót do marszu.
+   */
+  private updateBoss(o: Matter.Body, ed: EnemyData, player: Matter.Body, now: number, eOnGround: boolean): void {
+    const slow = activeEffects.slowTime > 0 ? 0.5 : 1;
+    switch (ed.bossPhase) {
+      case 'telegraph':
+        Body.setVelocity(o, { x: 0, y: o.velocity.y });
+        // Celowanie — wilk patrzy na kurkę; renderer pokazuje to błyskiem.
+        ed.facing = player.position.x >= o.position.x ? 1 : -1;
+        if (now >= ed.phaseUntil) {
+          ed.bossPhase = 'dash';
+          ed.dashDir = ed.facing;
+          // Awaryjne odcięcie szarży, gdyby wilk utknął o przeszkody.
+          ed.phaseUntil = now + 4000;
+          this.audio.playDash();
+        }
+        break;
+      case 'dash': {
+        Body.setVelocity(o, { x: ed.dashDir * BOSS_DASH_SPEED * slow, y: o.velocity.y });
+        ed.facing = ed.dashDir;
+        ed.walkPhase += 0.5; // szarża — nogi tłuką szybciej
+        if (Math.random() < 0.5) {
+          this.factory.spawnParticles(o.position.x - ed.dashDir * ed.r, o.position.y + ed.r - 4, '#dust', 1);
+        }
+        const edge = ed.dashDir < 0
+          ? Math.max(ed.patrolMin, 36)
+          : Math.min(ed.patrolMax, levelState.len - 36);
+        if ((ed.dashDir < 0 ? o.position.x <= edge : o.position.x >= edge) || now >= ed.phaseUntil) {
+          ed.bossPhase = 'recover';
+          ed.phaseUntil = now + BOSS_RECOVER_MS;
+          Body.setVelocity(o, { x: 0, y: o.velocity.y });
+          this.factory.spawnParticles(o.position.x, o.position.y + ed.r, '#dust', 14);
+          this.audio.playStomp(); // łupnięcie o krawędź areny
+        }
+        break;
+      }
+      case 'recover':
+        Body.setVelocity(o, { x: 0, y: o.velocity.y });
+        if (now >= ed.phaseUntil) {
+          ed.bossPhase = 'walk';
+          ed.nextChargeAt = now + ed.chargeMs;
+        }
+        break;
+      default: {
+        // walk — granice patrolu/areny zawracają wilka; kierunek poprawiany
+        // dopiero co BOSS_STALK_MS, więc da się go wyprzeć i zmylić.
+        const minB = Math.max(ed.patrolMin, 34);
+        const maxB = Math.min(ed.patrolMax, levelState.len - 34);
+        if (o.position.x <= minB) ed.dirX = 1;
+        else if (o.position.x >= maxB) ed.dirX = -1;
+        else if (now >= ed.nextStalkAt) {
+          ed.dirX = player.position.x >= o.position.x ? 1 : -1;
+          ed.nextStalkAt = now + BOSS_STALK_MS;
+        }
+        Body.setVelocity(o, { x: ed.dirX * ed.speed * slow, y: o.velocity.y });
+        ed.facing = ed.dirX;
+        // Zrzut przeszkody celowanej w okolice gracza — tylko podczas marszu.
+        if (now > ed.nextAttack) {
+          this.factory.spawnFallingObstacle(player.position.x + (Math.random() - 0.5) * 70);
+          ed.nextAttack = now + ed.attackMs;
+        }
+        // Szarża rusza tylko z ziemi — pulsowanie musi się dobrze czytać.
+        if (eOnGround && now >= ed.nextChargeAt) {
+          ed.bossPhase = 'telegraph';
+          ed.phaseUntil = now + BOSS_TELEGRAPH_MS;
+          this.audio.playCharge();
+        }
+        break;
       }
     }
   }

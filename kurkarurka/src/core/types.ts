@@ -40,6 +40,10 @@ export type GameMode = 'normal' | 'hard';
 /** Typy wrogów (lisów) — determinują parametry i zachowanie AI. */
 export type EnemyType = 'walker' | 'jumper' | 'dasher' | 'tank' | 'boss';
 
+/** Fazy zachowania wilka-bossa (automat skończony): marsz z zapamiętanym
+ *  kierunkiem → pulsowanie-ostrzeżenie → szarża przez arenę → odpoczynek. */
+export type BossPhase = 'walk' | 'telegraph' | 'dash' | 'recover';
+
 /** Dane wroga (lisa) — w tym bossa (EnemyType 'boss'). */
 export interface EnemyData {
   type: EnemyType;
@@ -60,6 +64,12 @@ export interface EnemyData {
   color: string;         // kolor sierści lisa
   nextAttack: number;    // boss: czas następnego zrzutu przeszkody (ms)
   attackMs: number;      // boss: odstęp między zrzutami (ms)
+  bossPhase: BossPhase;  // boss: faza zachowania (walk/telegraph/dash/recover)
+  phaseUntil: number;    // boss: koniec fazy telegraph/recover (ms)
+  nextChargeAt: number;  // boss: najwcześniejszy start kolejnej szarży (ms)
+  nextStalkAt: number;   // boss: kolejna poprawka kierunku marszu (ms)
+  chargeMs: number;      // boss: odstęp między szarżami (skala tieru areny)
+  dashDir: number;       // boss: kierunek szarży (-1 lewo / 1 prawo)
 }
 
 /** Typy spadających przeszkód (różnią się tylko spritem). */

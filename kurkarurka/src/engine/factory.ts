@@ -9,7 +9,7 @@
  *    nowy typ wroga to dopisek w tabeli, nie zmiana kodu.
  */
 import * as Matter from 'matter-js';
-import { GROUND_H, W, H, PLATFORM_H, BOSS_HP_PER_TIER, BOSS_ATTACK_MS, BOSS_ATTACK_STEP_MS } from '../core/config';
+import { GROUND_H, W, H, PLATFORM_H, BOSS_HP_PER_TIER, BOSS_ATTACK_MS, BOSS_ATTACK_STEP_MS, BOSS_CHARGE_EVERY_MS, BOSS_CHARGE_STEP_MS } from '../core/config';
 import { gameState, levelState, eggs, enemies, fallingObstacles, powerups, particles, popups, grounds, platforms } from '../core/state';
 import { physics } from './physics';
 import type { EggData, EnemyData, EnemyType, FallingData, FallingType, PowerupData, PowerupType } from '../core/types';
@@ -95,10 +95,17 @@ export class EntityFactory {
       color: s.color,
       nextAttack: 0,
       attackMs: type === 'boss' ? Math.max(600, s.attackMs - tier * BOSS_ATTACK_STEP_MS) : 0,
+      bossPhase: 'walk',
+      phaseUntil: 0,
+      nextChargeAt: 0,
+      nextStalkAt: 0,
+      chargeMs: type === 'boss' ? Math.max(1800, BOSS_CHARGE_EVERY_MS - tier * BOSS_CHARGE_STEP_MS) : 0,
+      dashDir: 0,
     } as EnemyData;
     if (type === 'boss') {
       enemy.label = 'boss';
       enemy.gameData.nextAttack = physics.now + 1200;
+      enemy.gameData.nextChargeAt = physics.now + enemy.gameData.chargeMs;
       gameState.bossActive = true;
     }
     Body.setVelocity(enemy, { x: dirX * enemy.gameData.speed, y: 0 });

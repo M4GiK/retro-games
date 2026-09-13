@@ -97,6 +97,18 @@ export const BOSS_EGG_MS = 1200;
 export const BOSS_CLEAR_PTS = 250;
 /** Pauza (ms) między pokonaniem bossa a startem kolejnego poziomu. */
 export const BOSS_CLEAR_DELAY_MS = 2400;
+/** Odstęp (ms) między szarżami wilka — skraca się o tier * BOSS_CHARGE_STEP_MS. */
+export const BOSS_CHARGE_EVERY_MS = 3400;
+export const BOSS_CHARGE_STEP_MS = 250;
+/** Czas (ms) pulsowania przed szarżą — okno ostrzeżenia dla gracza. */
+export const BOSS_TELEGRAPH_MS = 750;
+/** Prędkość szarży (px/tick) — wilk przelatuje przez całą arenę. */
+export const BOSS_DASH_SPEED = 11;
+/** Pauza (ms) wilka po doleceniu do krawędzi areny — okno na kontratak. */
+export const BOSS_RECOVER_MS = 800;
+/** Odstęp (ms) między poprawkami kierunku marszu bossa — wilk poluje
+ *  "z zapamiętaniem", zamiast kleić się do kurki w każdej klatce. */
+export const BOSS_STALK_MS = 1400;
 
 // ---- Limity i interwały spawnów ----
 

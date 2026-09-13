@@ -196,6 +196,20 @@ export class AudioSystem {
     this.noise(0.5, t, 0.08, 300);
   }
 
+  /** Pulsowanie bossa przed szarżą — narastający pomruk ostrzeżenia. */
+  playCharge(): void {
+    const t = this.now;
+    this.tone(90, 'sawtooth', 0.7, t, 0.1, 420);
+    this.noise(0.6, t, 0.03, 900);
+  }
+
+  /** Wystrzał szarży — świst szumu + opadający ton rozpędu. */
+  playDash(): void {
+    const t = this.now;
+    this.noise(0.35, t, 0.13, 2600);
+    this.tone(320, 'square', 0.3, t, 0.07, 70);
+  }
+
   /** Fanfara po pokonaniu bossa — wznoszące arpeggio z finałowym akordem. */
   playVictory(): void {
     const t = this.now;
