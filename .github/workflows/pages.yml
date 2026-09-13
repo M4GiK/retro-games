@@ -25,9 +25,9 @@ jobs:
           cache-dependency-path: |
             kurkarurka/package-lock.json
             jetman-online/package-lock.json
-      - run: npm ci && npm run build
+      - run: npm ci && npm run typecheck && npm run build
         working-directory: kurkarurka
-      - run: npm ci && npm run build
+      - run: npm ci && npm run typecheck && npm run build
         working-directory: jetman-online
       # Launcher (root index.html) linkuje relatywnie do covers/ i
       # <gra>/dist/ — katalog strony musi odzwierciedlać layout repo.
