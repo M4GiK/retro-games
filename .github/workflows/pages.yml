@@ -22,16 +22,21 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: kurkarurka/package-lock.json
+          cache-dependency-path: |
+            kurkarurka/package-lock.json
+            jetman-online/package-lock.json
       - run: npm ci && npm run build
         working-directory: kurkarurka
+      - run: npm ci && npm run build
+        working-directory: jetman-online
       # Launcher (root index.html) linkuje relatywnie do covers/ i
-      # kurkarurka/dist/ — katalog strony musi odzwierciedlać layout repo.
+      # <gra>/dist/ — katalog strony musi odzwierciedlać layout repo.
       - run: |
-          mkdir -p site/kurkarurka
+          mkdir -p site/kurkarurka site/jetman-online
           cp index.html site/
           cp -r covers site/covers
           cp -r kurkarurka/dist site/kurkarurka/dist
+          cp -r jetman-online/dist site/jetman-online/dist
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
