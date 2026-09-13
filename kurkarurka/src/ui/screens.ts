@@ -327,11 +327,11 @@ export class ScreenManager {
         if (k === 'ArrowUp' || k === 'w' || k === 'W') {
           this.menuSel = (this.menuSel - 1 + this.menuItems.length) % this.menuItems.length;
           this.menuItems.forEach((li, i) => li.classList.toggle('sel', i === this.menuSel));
-          this.audio.playJump();
+          this.audio.playMove();
         } else if (k === 'ArrowDown' || k === 's' || k === 'S') {
           this.menuSel = (this.menuSel + 1) % this.menuItems.length;
           this.menuItems.forEach((li, i) => li.classList.toggle('sel', i === this.menuSel));
-          this.audio.playJump();
+          this.audio.playMove();
         } else if (k === 'Enter' || k === ' ') {
           this.activateMenuItem();
         }
@@ -347,10 +347,11 @@ export class ScreenManager {
         else if (k === 'Enter') this.hsConfirm();
         break;
       case 'over':
-        if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'ArrowDown' || k === 's' || k === 'S') {
+        if (k === 'ArrowLeft' || k === 'a' || k === 'A' || k === 'ArrowRight' || k === 'd' || k === 'D'
+          || k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'ArrowDown' || k === 's' || k === 'S') {
           this.overSel = (this.overSel + 1) % this.overButtons.length;
           this.overRenderSel();
-          this.audio.playJump();
+          this.audio.playMove();
         } else if (k === 'Enter' || k === ' ') {
           this.activateOverItem();
         } else if (k === 'Escape') {

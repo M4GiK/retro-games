@@ -161,6 +161,11 @@ export class AudioSystem {
 
   // ---- Efekty grywalnościowe (SFX) ----
 
+  /** Ruch kursora w menu — krótki "blip" kursora w stylu NES. */
+  playMove(): void {
+    this.tone(1100, 'square', 0.05, this.now, 0.08);
+  }
+
   /** Skok kurki — narastający kwadrat. */
   playJump(): void {
     this.tone(200, 'square', 0.12, this.now, 0.08, 400);

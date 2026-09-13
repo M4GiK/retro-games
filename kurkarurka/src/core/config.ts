@@ -127,10 +127,25 @@ export const POWERUP_INTERVAL_MS = 12_000;
 export const NIGHTMARE_EXTRA_SCREENS = 4;
 /** Długość świata koszmaru w px (ekran startowy + ekrany w prawo). */
 export const NIGHTMARE_LEN = VIEW_W * (1 + NIGHTMARE_EXTRA_SCREENS);
-/** Opóźnienie (ms) pierwszego spawnu lisków po starcie rundy. */
+/** Opóźnienie (ms) pierwszej fali lisków po starcie rundy. */
 export const FOX_START_DELAY_MS = 9_000;
-/** Co ile zabitych lisków trudność rośnie o 1 (poza krokiem czasowym). */
-export const FOX_KILLS_PER_STEP = 5;
+/** Maksymalna liczba lisków na arenie naraz (wilk-boss się nie liczy).
+ *  Twardy limit — bez niego ciężkie liski kopcowały pod kurką
+ *  i solver fizyki wybijał ją w górę bez możliwości zejścia. */
+export const FOX_MAX = 5;
+/** Największa wielkość fali lisków. */
+export const FOX_WAVE_MAX = 6;
+/** Odstęp (ms) między kolejnymi liskami wewnątrz fali. */
+export const FOX_WAVE_STEP_MS = 450;
+/** Bazowa pauza (ms) między falami — kurczy się z trudnością. */
+export const FOX_WAVE_PAUSE_MS = 6_500;
+/** Skrócenie pauzy między falami za poziom trudności (ms). */
+export const FOX_WAVE_PAUSE_STEP_MS = 350;
+/** Najkrótsza możliwa pauza między falami (ms). */
+export const FOX_WAVE_PAUSE_MIN_MS = 2_500;
+/** Sufit przyspieszenia liska od wyniku (px/tick) — bez niego przy
+ *  dużym score liski robiły się szybsze od kurki. */
+export const ENEMY_SCORE_SPEED_MAX = 1.6;
 
 // ---- Przygoda (tryb platformowy à la Mario) ----
 

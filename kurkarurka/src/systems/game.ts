@@ -21,7 +21,8 @@ import {
   MAX_COMBO, COMBO_WINDOW_MS, GAMEOVER_DELAY_MS,
   MAX_DIFFICULTY, DIFFICULTY_STEP_MS, BOSS_EVERY_LEVELS,
   EGG_MAX, FALLING_MAX, POWERUP_MAX, POWERUP_INTERVAL_MS,
-  NIGHTMARE_LEN, FOX_START_DELAY_MS, FOX_KILLS_PER_STEP,
+  NIGHTMARE_LEN, FOX_START_DELAY_MS, FOX_MAX,
+  FOX_WAVE_MAX, FOX_WAVE_STEP_MS, FOX_WAVE_PAUSE_MS, FOX_WAVE_PAUSE_STEP_MS, FOX_WAVE_PAUSE_MIN_MS,
   BOSS_LEVEL_EVERY, BOSS_FALLING_MS, BOSS_FALLING_STEP_MS,
   BOSS_EGG_MS, BOSS_CLEAR_PTS, BOSS_CLEAR_DELAY_MS,
   BOSS_TELEGRAPH_MS, BOSS_DASH_SPEED, BOSS_RECOVER_MS, BOSS_STALK_MS,
@@ -45,7 +46,6 @@ export class Game {
   // Timery spawnów — resetowane na starcie rundy do bieżącego timestampu,
   // żeby czas spędzony na ekranie intro nie powodował natychmiastowych spawnów.
   private lastEgg = 0;
-  private lastEnemy = 0;
   private lastFalling = 0;
   private lastPowerup = 0;
   private lastLevelUp = 0;
@@ -53,10 +53,16 @@ export class Game {
   /** Poziom trudności, dla którego boss już się pojawił (spawn raz na poziom). */
   private bossSpawnedAt = 0;
   private currentMode: GameMode = 'normal';
-  /** Koszmar: moment pierwszego spawnu lisków, licznik zabójstw i flaga ostrzeżenia. */
+  /** Koszmar: moment pierwszej fali lisków i flaga ostrzeżenia. */
   private foxStartAt = 0;
-  private foxKills = 0;
   private foxWarned = false;
+  /** Fale lisków: sztuki bieżącej fali do wypuszczenia, moment kolejnego
+   *  spawnu w fali i najwcześniejszy start następnej fali.
+   *  pincer = fala wchodzi na przemian z lewej i prawej krawędzi kamery. */
+  private foxWaveLeft = 0;
+  private foxNextInWave = 0;
+  private foxWaveAt = 0;
+  private foxWavePincer = false;
   /** Próg punktowy kolejnego bonusowego życia (2k, 5k, potem ×2). */
   private nextLifeAt = EXTRA_LIFE_FIRST;
   /** Bufor skoku — wciśnięcie tuż przed lądowaniem wykona skok po dotknięciu ziemi. */
@@ -114,11 +120,14 @@ export class Game {
     activeEffects.slowTime = 0;
     activeEffects.doubleJump = 0;
     const now = physics.now;
-    this.lastEgg = this.lastEnemy = this.lastFalling = this.lastPowerup = this.lastLevelUp = this.lastFlyer = now;
+    this.lastEgg = this.lastFalling = this.lastPowerup = this.lastLevelUp = this.lastFlyer = now;
     this.bossSpawnedAt = 0;
     this.foxStartAt = now + FOX_START_DELAY_MS;
-    this.foxKills = 0;
     this.foxWarned = false;
+    this.foxWaveLeft = 0;
+    this.foxNextInWave = 0;
+    this.foxWaveAt = 0;
+    this.foxWavePincer = false;
     this.nextLifeAt = EXTRA_LIFE_FIRST;
     this.jumpBufferUntil = 0;
     this.prevJumpHeld = false;
@@ -433,7 +442,7 @@ export class Game {
       physics.resetPlayer();
       const now = physics.now;
       gameState.invulnUntil = now + 1200;
-      this.lastEgg = this.lastEnemy = this.lastFalling = this.lastPowerup = now;
+      this.lastEgg = this.lastFalling = this.lastPowerup = now;
       void this.audio.tryPlay('normal');
       this.factory.addPopup(128, H() - GROUND_H - 80, 'POZIOM ' + gameState.level, '#ffcc00');
     }, BOSS_CLEAR_DELAY_MS);
@@ -491,24 +500,22 @@ export class Game {
 
   /**
    * Strona spawnu liska w koszmarze: tuż za krawędzią kamery, z marszem
-   * w stronę gracza. Od trudności 3 część grup zaskakuje od lewej.
+   * w stronę gracza. Bez argumentu losuje — od trudności 3 część lisków
+   * zaskakuje od lewej; fala obustronna podaje stronę jawnie.
    */
-  private foxSpawnSide(): { x: number; dirX: number } {
+  private foxSpawnSide(fromLeft?: boolean): { x: number; dirX: number } {
     const cam = this.camX();
-    const fromLeft = gameState.difficulty >= 3 && Math.random() < 0.3;
-    return fromLeft ? { x: cam - 24, dirX: 1 } : { x: cam + W() + 24, dirX: -1 };
+    const left = fromLeft ?? (gameState.difficulty >= 3 && Math.random() < 0.3);
+    return left ? { x: cam - 24, dirX: 1 } : { x: cam + W() + 24, dirX: -1 };
   }
 
-  /**
-   * Zabity lisek nasila koszmar — licznik napędza tempo i wielkość
-   * kolejnych grup, a co FOX_KILLS_PER_STEP zabójstw rośnie trudność.
-   */
-  private onFoxKilled(): void {
-    if (gameState.mode !== 'hard') return;
-    this.foxKills += 1;
-    if (this.foxKills % FOX_KILLS_PER_STEP === 0) {
-      gameState.difficulty = Math.min(MAX_DIFFICULTY, gameState.difficulty + 1);
+  /** Liczba żywych lisków na arenie (bez wilka-bossa) — patrz FOX_MAX. */
+  private foxCount(): number {
+    let n = 0;
+    for (const e of enemies) {
+      if ((e.gameData as EnemyData).type !== 'boss') n += 1;
     }
+    return n;
   }
 
   /** Aktywny magnes przyciąga jajka w promieniu ~90 px do gracza. */
@@ -528,8 +535,8 @@ export class Game {
   /**
    * Spawny sterowane czasem: power-upy, boss co 4 poziomy, skalowanie
    * trudności co 10 s oraz strumień jajek po całej arenie. Liski ruszają
-   * po FOX_START_DELAY_MS; ich tempo i wielkość grup rosną z trudnością
-   * i liczbą zabójstw (patrz onFoxKilled).
+   * po FOX_START_DELAY_MS falami: wielkość fali rośnie z trudnością,
+   * a pauza między falami maleje — twardy FOX_MAX trzyma arenę w ryzach.
    */
   private updateSpawning(now: number): void {
     // Power-upy — rzadkie, max 1 na planszy
@@ -569,23 +576,31 @@ export class Game {
       this.lastEgg = now;
     }
 
-    // Liski — po początkowej pauzie wpadają grupami znad krawędzi kamery
-    // (co 450 ms kolejny); zabójstwa przyspieszają tempo i rosną grupy.
-    if (now >= this.foxStartAt) {
+    // Liski wpadają falami znad krawędzi kamery: kilka sztuk co
+    // FOX_WAVE_STEP_MS, potem pauza krótsza im wyższa trudność.
+    // Limit FOX_MAX i wstrzymanie fal podczas walki z wilkiem
+    // zapobiegają kopcowi ciał, który wybijał kurkę w niebo.
+    if (now >= this.foxStartAt && !gameState.bossActive) {
       if (!this.foxWarned) {
         this.foxWarned = true;
         this.factory.addPopup(physics.player.position.x, H() - GROUND_H - 80, 'LISKI!', '#f83800');
       }
-      const enemyInterval = Math.max(1200, 4200 - gameState.difficulty * 240 - this.foxKills * 80);
-      if (now - this.lastEnemy > enemyInterval) {
-        const groupSize = Math.min(4, 1 + Math.floor(this.foxKills / 5) + (gameState.difficulty >= 6 ? 1 : 0));
-        for (let k = 0; k < groupSize; k++) {
-          const side = this.foxSpawnSide();
-          setTimeout(() => {
-            if (gameState.running && !gameState.paused) this.factory.spawnEnemy(null, side);
-          }, k * 450);
+      if (this.foxWaveLeft <= 0 && now >= this.foxWaveAt) {
+        this.foxWaveLeft = Math.min(FOX_WAVE_MAX, 2 + Math.floor(gameState.difficulty / 2));
+        this.foxWavePincer = gameState.difficulty >= 3 && Math.random() < 0.35;
+        this.foxNextInWave = now;
+      }
+      if (this.foxWaveLeft > 0 && now >= this.foxNextInWave && this.foxCount() < FOX_MAX) {
+        const side = this.foxWavePincer ? this.foxSpawnSide(this.foxWaveLeft % 2 === 0) : this.foxSpawnSide();
+        this.factory.spawnEnemy(null, side);
+        this.foxWaveLeft -= 1;
+        this.foxNextInWave = now + FOX_WAVE_STEP_MS;
+        if (this.foxWaveLeft === 0) {
+          this.foxWaveAt = now + Math.max(
+            FOX_WAVE_PAUSE_MIN_MS,
+            FOX_WAVE_PAUSE_MS - gameState.difficulty * FOX_WAVE_PAUSE_STEP_MS,
+          );
         }
-        this.lastEnemy = now;
       }
     }
   }
@@ -722,7 +737,7 @@ export class Game {
             if (ed.type === 'boss') {
               gameState.bossActive = false;
               if (levelState.bossArena) this.onBossArenaClear(o.position.x, o.position.y);
-            } else this.onFoxKilled();
+            }
             Composite.remove(physics.engine.world, o);
             enemies.splice(i, 1);
           }
@@ -731,7 +746,6 @@ export class Game {
           this.factory.spawnParticles(player.position.x, player.position.y, '#00e5ff', 18);
           Body.setVelocity(player, { x: edx > 0 ? -6 : 6, y: -5 });
           if (ed.type !== 'boss') {
-            this.onFoxKilled();
             Composite.remove(physics.engine.world, o);
             enemies.splice(i, 1);
           }

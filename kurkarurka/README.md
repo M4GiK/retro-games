@@ -39,9 +39,11 @@ npm run typecheck  # tsc --noEmit
     pokonaniu fanfara i powrót do przygody.
   - `KOSZMAR` — arena przetrwania przewijana na 5 ekranów w prawo:
     zbieraj jajka spadające po całej arenie, unikaj kamieni, skacz
-    liskom na łeb. Liski ruszają po ~9 s i gonią gracza — każde
-    zabite nasila tempo spawnów i co 5 zabójstw podnosi trudność
-    (trudność rośnie też co 10 s; boss co 4. poziom).
+    liskom na łeb. Liski ruszają po ~9 s i wpadają falami znad
+    krawędzi ekranu (max 5 naraz; od trudności 3 część fal
+    zaskakuje z obu stron). Trudność rośnie co 10 s — fale robią
+    się większe i częstsze; wilk-boss co 4. poziom, a podczas
+    walki z nim fale lisków czekają.
 - **Wspólne:** skok na łeb lisa = punkty (u Mario), utrata jajka lub
   trafienie resetuje combo; trafienie daje chwilę nietykalności.
 - **Power-upy:** serce (+1 życie), tarcza, magnes na jajka (koszmar),
