@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>M4GiK Software — Retro Games</title>
+<style>
+@font-face{font-family:'Press Start 2P';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,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) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Press Start 2P';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,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) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;image-rendering:pixelated}
+html,body{height:100%;margin:0;overscroll-behavior:none}
+body{
+  background:radial-gradient(ellipse at 50% 70%,#1c1233 0%,#0a0a18 55%,#04040a 100%);
+  font-family:'Press Start 2P','Courier New',monospace;color:#f4f4f4;overflow:hidden;
+  user-select:none;-webkit-user-select:none;
+}
+/* subtelny dither tła — jak maski .screen.ghost w grze */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(rgba(255,255,255,.015) 0% 25%,transparent 0% 50%);
+  background-size:4px 4px}
+
+/* ---- Ekran kineskopu: collapse/expand jak splash gry ---- */
+#tv{position:fixed;inset:0;transform-origin:center;will-change:transform,filter}
+#tv.shut{animation:tvOff .42s cubic-bezier(.7,0,.9,.4) forwards}
+#tv.open{animation:tvOn .5s cubic-bezier(.2,.6,.3,1) both}
+@keyframes tvOff{
+  0%{transform:scale(1,1);filter:brightness(1)}
+  55%{transform:scale(1.04,.010);filter:brightness(2.8)}
+  78%{transform:scale(1,.006);filter:brightness(4)}
+  100%{transform:scale(.15,.004);filter:brightness(0)}
+}
+@keyframes tvOn{
+  0%{transform:scale(.35,.006);filter:brightness(5)}
+  40%{transform:scale(1,.012);filter:brightness(3.2)}
+  100%{transform:scale(1,1);filter:brightness(1)}
+}
+
+/* ---- Półka (launcher) ---- */
+#shelf{position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#shelf[hidden],#player[hidden]{display:none}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 28px 0}
+.brand{font-size:clamp(12px,2.6vw,18px);color:#fcfcfc;letter-spacing:3px;text-shadow:3px 3px 0 #ff0055;
+  text-decoration:none;display:inline-block}
+.brand b{color:#ffcc00;font-weight:400}
+.brand small{display:block;font-size:.45em;color:#00e5ff;letter-spacing:7px;margin-top:8px;text-shadow:none}
+.status{display:flex;align-items:center;gap:16px;font-size:9px;color:#7fa0c8}
+#muteBtn{border:2px solid #000;background:#00e5ff;color:#000;font-family:inherit;font-size:8px;
+  padding:6px 8px;cursor:pointer;box-shadow:3px 3px 0 rgba(252,252,252,.7)}
+#muteBtn:active{transform:translate(3px,3px);box-shadow:none}
+.batt{width:24px;height:12px;border:2px solid #fcfcfc;position:relative;padding:1px;flex:none}
+.batt::before{content:'';position:absolute;right:-5px;top:2px;width:3px;height:4px;background:#fcfcfc}
+.batt i{display:block;height:100%;width:72%;background:#00e5ff}
+
+main{flex:1;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:36px;
+  align-items:center;padding:8px 40px;min-height:0}
+
+/* Pasek okładek — jak rząd gier na Switchu */
+#rail{display:flex;align-items:center;overflow-x:auto;overflow-y:visible;min-height:0;
+  scrollbar-width:none;-ms-overflow-style:none}
+#rail::-webkit-scrollbar{display:none}
+#railInner{margin:auto;display:flex;align-items:center;gap:48px;padding:34px 8px}
+.cart{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:none;border:0;padding:0;cursor:pointer;font-family:inherit;
+  transition:transform .18s steps(4),filter .18s}
+.cart img,.cart .q{
+  width:min(34dvh,26dvw,320px);min-width:150px;aspect-ratio:901/1024;object-fit:cover;display:block;
+  border:3px solid #2a2a44;box-shadow:6px 6px 0 rgba(0,0,0,.55);
+  filter:brightness(.55) saturate(.7);transition:filter .18s,box-shadow .18s,border-color .18s}
+.cart .q{display:flex;align-items:center;justify-content:center;font-size:clamp(60px,11dvh,120px);color:#3a3a5c;
+  background:repeating-conic-gradient(#12121f 0% 25%,#0b0b14 0% 50%);background-size:8px 8px;
+  border-style:dashed}
+.cart-label{font-size:9px;color:#7fa0c8;letter-spacing:1px;transition:color .18s;text-transform:uppercase}
+.cart.sel{transform:translateY(-10px) scale(1.12)}
+.cart.sel img{border-color:#00e5ff;filter:none;
+  box-shadow:6px 6px 0 rgba(0,0,0,.55),0 0 0 3px #0a0a18,0 0 30px rgba(0,229,255,.45)}
+.cart.sel .cart-label{color:#ffcc00;text-shadow:2px 2px 0 #f83800}
+.cart.shake{animation:shake .3s steps(6)}
+@keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+
+/* Panel opisu obok półki */
+#info{position:relative;border:3px solid #fcfcfc;background:rgba(10,10,24,.88);
+  box-shadow:8px 8px 0 rgba(0,0,0,.6);padding:24px 24px 20px;min-width:0;text-transform:uppercase}
+#info::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(rgba(0,0,0,.14) 0% 25%,transparent 0% 50%);background-size:4px 4px}
+#info>*{position:relative}
+.chip{display:inline-block;font-size:7px;letter-spacing:2px;color:#000;background:#00e5ff;
+  padding:5px 8px;margin-bottom:14px;box-shadow:3px 3px 0 #000}
+#gTitle{margin:0 0 12px;font-size:clamp(15px,3vw,24px);line-height:1.5;color:#fcfcfc;
+  letter-spacing:2px;text-shadow:3px 3px 0 #000}
+#gTitle span{color:#ffcc00;text-shadow:3px 3px 0 #f83800}
+#gTag{font-size:8px;color:#ffcc00;letter-spacing:1px;line-height:2;margin:0 0 14px}
+#gDesc{font-size:9px;line-height:2.1;letter-spacing:1px;color:#c8d4ea;margin:0 0 18px;max-width:44ch}
+#meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+#meta span{font-size:7px;color:#7fa0c8;border:2px solid #2a2a44;padding:6px 8px;letter-spacing:1px}
+#meta b{color:#fcfcfc;font-weight:400}
+#playBtn{width:100%;padding:14px;border:3px solid #000;background:#ffcc00;color:#000;
+  font-family:inherit;font-size:11px;letter-spacing:2px;cursor:pointer;box-shadow:5px 5px 0 #fff}
+#playBtn:active{transform:translate(5px,5px);box-shadow:0 0 0 #fff}
+#playBtn[disabled]{background:#2a2a44;color:#7fa0c8;box-shadow:5px 5px 0 #000;cursor:default;
+  transform:none}
+
+footer{padding:0 28px 18px;display:flex;justify-content:space-between;align-items:center;
+  font-size:7px;color:#7fa0c8;letter-spacing:2px;text-transform:uppercase}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---- Widok gry (iframe) + przycisk powrotu ---- */
+#player{position:absolute;inset:0;background:#000}
+#player iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+#homeBtn{position:absolute;top:10px;left:10px;z-index:8;padding:8px 10px;border:2px solid #000;
+  background:rgba(26,28,44,.72);color:#00e5ff;font-family:inherit;font-size:8px;letter-spacing:1px;
+  cursor:pointer;box-shadow:3px 3px 0 #000;opacity:.45;transition:opacity .15s}
+#homeBtn:hover,#homeBtn:focus-visible{opacity:1}
+#homeBtn:active{transform:translate(3px,3px);box-shadow:none}
+
+/* ---- Ekran wkładania kasety — jak #boot w grze ---- */
+#loading{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:26px;background:rgba(0,0,0,.94);text-align:center;padding:24px;
+  text-transform:uppercase}
+#loading[hidden]{display:none}
+#loading::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(rgba(0,0,0,.25) 0% 25%,transparent 0% 50%);background-size:4px 4px}
+#loadLogo{font-size:clamp(16px,4.5vw,26px);color:#fcfcfc;letter-spacing:4px;position:relative;
+  animation:bootpop .45s steps(5) both}
+#loadLogo span{color:#ffcc00}
+.slot{position:relative;width:150px;height:66px}
+.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:16px;
+  border:3px solid #7fa0c8;border-bottom-width:5px;background:#0a0a14}
+.cartchip{position:absolute;left:50%;bottom:14px;width:64px;height:44px;margin-left:-32px;
+  background:#2a2a44;border:3px solid #fcfcfc;border-bottom:0;
+  animation:cartIn 1.1s steps(8) infinite}
+.cartchip::before{content:'';position:absolute;inset:6px 8px auto;height:16px;background:#ffcc00}
+.cartchip::after{content:'';position:absolute;left:8px;right:8px;bottom:4px;height:8px;
+  background:repeating-linear-gradient(90deg,#f83800 0 6px,transparent 6px 12px)}
+@keyframes cartIn{0%{transform:translateY(-56px)}70%,100%{transform:translateY(0)}}
+@keyframes bootpop{from{transform:scale(2.2);opacity:0}to{transform:scale(1);opacity:1}}
+.boot-bar{width:min(240px,60%);height:16px;border:3px solid #fcfcfc;padding:2px;position:relative}
+#loadFill{height:100%;width:0;background:#f83800;transition:width .12s steps(2)}
+#loadHint{font-size:8px;color:#7fa0c8;letter-spacing:2px;position:relative;margin:0}
+
+/* ---- CRT overlay — jak drawCrtOverlay w grze, nad wszystkim ---- */
+#crt{position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.20) 0 1px,transparent 1px 3px)}
+#crt::before{content:'';position:absolute;left:0;right:0;top:-80px;height:80px;
+  background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.045),rgba(255,255,255,0));
+  animation:crtroll 8s linear infinite}
+@keyframes crtroll{to{transform:translateY(calc(100vh + 160px))}}
+#crt::after{content:'';position:absolute;inset:0;
+  box-shadow:inset 0 0 110px rgba(0,0,0,.6),inset 0 0 10px rgba(0,0,0,.9)}
+
+@media (max-width:840px){
+  main{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:10px;align-items:start;
+    overflow-y:auto;padding:0 18px}
+  #rail{width:100%}
+  #railInner{margin:0 auto;gap:30px}
+  .cart img,.cart .q{width:min(26dvh,40dvw,220px)}
+  #info{margin-bottom:12px}
+  footer{justify-content:center;gap:18px;flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div id="tv">
+  <section id="shelf">
+    <header>
+      <a class="brand" href="https://m4gik.github.io/" target="_blank" rel="noopener"
+        title="m4gik.github.io">M<b>4</b>GiK<small>SOFTWARE</small></a>
+      <div class="status">
+        <button id="muteBtn" title="Dźwięk">SND</button>
+        <span id="clock">--:--</span>
+        <span class="batt"><i></i></span>
+      </div>
+    </header>
+    <main>
+      <div id="rail"><div id="railInner"></div></div>
+      <aside id="info">
+        <span class="chip" id="gChip">KASETA 8-BIT</span>
+        <h1 id="gTitle"></h1>
+        <p id="gTag"></p>
+        <p id="gDesc"></p>
+        <div id="meta"></div>
+        <button id="playBtn">▶ START</button>
+      </aside>
+    </main>
+    <footer>
+      <span>◀ ▶ WYBIERZ</span>
+      <span class="blink">ENTER — START</span>
+      <span>© 2026 M4GiK SOFTWARE</span>
+    </footer>
+  </section>
+
+  <section id="player" hidden>
+    <button id="homeBtn">◀ MENU</button>
+  </section>
+</div>
+
+<div id="loading" hidden>
+  <div id="loadLogo"></div>
+  <div class="slot"><div class="cartchip"></div></div>
+  <div class="boot-bar"><div id="loadFill"></div></div>
+  <p id="loadHint">WKŁADANIE KASETY...</p>
+</div>
+
+<div id="crt"></div>
+
+<script>
+'use strict';
+// Launcher "konsoli" — półka kaset w stylu Switch, całość w estetyce CRT/NES.
+// Nowa gra = wpis w GAMES (okładka w covers/, plik w <gra>/dist/).
+const GAMES = [
+  {
+    id: 'kurkarurka',
+    title: 'Kurkarurka',
+    logo: ['KURKA', 'RURKA'],
+    chip: 'KASETA 8-BIT',
+    tag: 'ZBIERAJ JAJKA · SKACZ NAD LISAMI',
+    desc: 'Kurka Robcio wyrusza po jajka! Skacz lisom na łby, łap złote jajka ' +
+      'za 5× punktów i buduj combo. Power-upy: tarcza, magnes, spowolnienie ' +
+      'czasu i dodatkowy skok. Co 4 poziomy czeka boss — wielki lis. ' +
+      'Dwa tryby: PRZYGODA i KOSZMAR. Ranking top 5 zapisuje się w konsoli.',
+    cover: 'covers/kurkarurka.jpg',
+    url: 'kurkarurka/dist/kurnik-physics.html',
+    meta: [['ROK', '2026'], ['GATUNEK', 'ZRĘCZNOŚCIOWA'], ['GRACZE', '1']],
+  },
+  {
+    id: 'soon', soon: true, title: '???', chip: 'KASETA',
+    tag: 'NASTĘPNA PRODUKCJA', desc: 'M4GiK Software składa kolejną kasetę. Wkrótce.',
+    meta: [['ROK', '—'], ['GATUNEK', '???'], ['GRACZE', '—']],
+  },
+];
+
+const $ = s => document.querySelector(s);
+const tv = $('#tv'), shelf = $('#shelf'), player = $('#player'),
+  railInner = $('#railInner'), loading = $('#loading'),
+  loadLogo = $('#loadLogo'), loadFill = $('#loadFill'), loadHint = $('#loadHint'),
+  playBtn = $('#playBtn'), homeBtn = $('#homeBtn');
+
+let sel = 0;
+let mode = 'shelf'; // shelf | anim | play
+
+// ---- Mini audio (te same kanały co w grze: square/saw/noise) ----
+let ac = null, muted = false;
+function actx() {
+  if (!ac) { const A = window.AudioContext || window.webkitAudioContext; ac = new A(); }
+  if (ac.state === 'suspended') void ac.resume();
+  return ac;
+}
+function tone(f, type, dur, at = 0, vol = 0.08, slide) {
+  if (muted) return;
+  try {
+    const c = actx(), o = c.createOscillator(), g = c.createGain(), t = c.currentTime + at;
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (slide != null) o.frequency.exponentialRampToValueAtTime(Math.max(20, slide), t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur);
+  } catch (e) { /* audio zablokowane */ }
+}
+const sMove = () => tone(700, 'square', 0.05, 0, 0.05);
+const sBuzz = () => { tone(130, 'square', 0.14, 0, 0.09); tone(130, 'square', 0.14, 0.17, 0.09); };
+const sCoin = () => {
+  tone(988, 'square', 0.06, 0, 0.08); tone(1319, 'square', 0.12, 0.06, 0.08);
+  tone(280, 'sawtooth', 0.32, 0.22, 0.05, 900);
+};
+const sOff = () => tone(520, 'square', 0.3, 0, 0.08, 60);
+const sOn = () => { tone(55, 'sawtooth', 0.35, 0, 0.06, 220); tone(1200, 'square', 0.06, 0.32, 0.05); };
+
+// ---- Półka kaset ----
+function buildRail() {
+  railInner.innerHTML = '';
+  GAMES.forEach((g, i) => {
+    const b = document.createElement('button');
+    b.className = 'cart' + (g.soon ? ' soon' : '') + (i === sel ? ' sel' : '');
+    b.innerHTML = g.soon
+      ? '<span class="q">?</span><span class="cart-label">???</span>'
+      : `<img src="${g.cover}" alt="${g.title}" draggable="false"><span class="cart-label">${g.title.toUpperCase()}</span>`;
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      if (mode !== 'shelf') return;
+      if (i === sel) launch(GAMES[i]); else select(i);
+    });
+    b.addEventListener('mouseenter', () => { if (mode === 'shelf' && sel !== i) select(i); });
+    railInner.appendChild(b);
+  });
+}
+
+function select(i, silent) {
+  sel = (i + GAMES.length) % GAMES.length;
+  if (!silent) sMove();
+  [...railInner.children].forEach((c, j) => c.classList.toggle('sel', j === sel));
+  const el = railInner.children[sel];
+  if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  updatePanel();
+}
+
+function updatePanel() {
+  const g = GAMES[sel];
+  $('#gChip').textContent = g.chip || 'KASETA 8-BIT';
+  $('#gTitle').innerHTML = g.logo
+    ? `${g.logo[0]}<span>${g.logo[1] || ''}</span>`
+    : g.title.toUpperCase();
+  $('#gTag').textContent = g.tag || '';
+  $('#gDesc').textContent = g.desc || '';
+  $('#meta').innerHTML = (g.meta || [])
+    .map(([k, v]) => `<span>${k} <b>${v}</b></span>`).join('');
+  playBtn.disabled = !!g.soon;
+  playBtn.textContent = g.soon ? 'WKRÓTCE' : '▶ START';
+}
+
+// ---- Przejścia CRT: obraz zapada się do linii / rozkłada z linii ----
+function onceAnim(el, fn) {
+  let done = false;
+  const fin = () => { if (done) return; done = true; clearTimeout(to); el.removeEventListener('animationend', h); fn(); };
+  const h = e => { if (e.target === el) fin(); };
+  const to = setTimeout(fin, 700); // fallback, gdyby animationend nie strzeliło
+  el.addEventListener('animationend', h);
+}
+function shut(cb) { tv.classList.add('shut'); onceAnim(tv, cb); }
+function open(cb) {
+  tv.classList.remove('shut'); tv.classList.add('open');
+  onceAnim(tv, () => { tv.classList.remove('open'); cb(); });
+}
+
+// ---- Uruchamianie gry ----
+function launch(g) {
+  if (mode !== 'shelf') return;
+  if (g.soon) {
+    sBuzz();
+    const t = railInner.children[sel];
+    t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake');
+    return;
+  }
+  mode = 'anim';
+  sCoin();
+  try { history.pushState({ g: g.id }, '', '?game=' + g.id); } catch (e) {}
+
+  shut(() => {
+    shelf.hidden = true;
+    player.hidden = false;
+    bootCart(g);
+  });
+}
+
+function bootCart(g) {
+  loadLogo.innerHTML = g.logo
+    ? `${g.logo[0]}<span>${g.logo[1] || ''}</span>` : g.title.toUpperCase();
+  loadHint.textContent = 'WKŁADANIE KASETY...';
+  loadFill.style.width = '0';
+  loading.hidden = false;
+
+  const frame = document.createElement('iframe');
+  frame.id = 'gameFrame';
+  frame.setAttribute('allow', 'autoplay; gamepad');
+  frame.src = g.url;
+  player.appendChild(frame);
+
+  const t0 = performance.now();
+  let loaded = false;
+  frame.addEventListener('load', () => { loaded = true; });
+  setTimeout(() => { loaded = true; }, 8000); // awaryjnie — nie blokuj
+
+  let p = 0;
+  const iv = setInterval(() => {
+    p = Math.min(p + 7, loaded ? 100 : 74);
+    loadFill.style.width = p + '%';
+    if (loaded && p >= 100) {
+      clearInterval(iv);
+      loadHint.textContent = 'START!';
+      const wait = Math.max(0, 1400 - (performance.now() - t0));
+      setTimeout(() => {
+        loading.hidden = true;
+        sOn();
+        open(() => {
+          mode = 'play';
+          try { frame.contentWindow.focus(); } catch (e) {}
+        });
+      }, wait + 240);
+    }
+  }, 110);
+}
+
+function goHome() {
+  if (mode !== 'play') return;
+  mode = 'anim';
+  sOff();
+  try { history.replaceState({}, '', location.pathname); } catch (e) {}
+  shut(() => {
+    const f = $('#gameFrame');
+    if (f) { f.src = 'about:blank'; f.remove(); }
+    player.hidden = true;
+    shelf.hidden = false;
+    open(() => { mode = 'shelf'; });
+  });
+}
+
+// ---- Input ----
+window.addEventListener('keydown', e => {
+  actx(); // pierwszy gest odblokowuje dźwięk
+  if (mode === 'play') { if (e.key === 'Escape') goHome(); return; }
+  if (mode !== 'shelf') return;
+  const k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') select(sel - 1);
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') select(sel + 1);
+  else if (k === 'Enter' || k === ' ') { e.preventDefault(); launch(GAMES[sel]); }
+});
+window.addEventListener('pointerdown', () => actx(), { once: true });
+window.addEventListener('popstate', () => { if (mode === 'play') goHome(); });
+
+playBtn.addEventListener('click', () => launch(GAMES[sel]));
+homeBtn.addEventListener('click', goHome);
+$('#muteBtn').addEventListener('click', e => {
+  muted = !muted;
+  e.target.textContent = muted ? 'OFF' : 'SND';
+  e.target.style.background = muted ? '#2a2a44' : '#00e5ff';
+  e.target.style.color = muted ? '#7fa0c8' : '#000';
+});
+
+// ---- Zegar jak w pasku statusu konsoli ----
+function tick() {
+  const d = new Date();
+  $('#clock').textContent =
+    String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+setInterval(tick, 5000); tick();
+
+// ---- Start: półka albo deep-link ?game=<id> ----
+buildRail();
+select(0, true);
+const wanted = new URLSearchParams(location.search).get('game');
+if (wanted) {
+  const i = GAMES.findIndex(g => g.id === wanted && !g.soon);
+  if (i >= 0) { select(i, true); launch(GAMES[i]); }
+}
+</script>
+</body>
+</html>
