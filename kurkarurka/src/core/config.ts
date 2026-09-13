@@ -128,3 +128,10 @@ export const LEVEL_SAFE_ZONE = 300;
 export const PLATFORM_H = 8;
 /** Punkty za ukończenie poziomu (mnożone przez numer poziomu). */
 export const LEVEL_CLEAR_PTS = 100;
+
+// ---- Pora dnia (cykl doby) ----
+
+/** Długość pełnego cyklu doby w ms — scena przechodzi płynnie przez
+ *  noc, świt, dzień i zmierzch. Dotyczy wyłącznie oświetlenia/kolorystyki,
+ *  mechanika gry jest niezależna od pory dnia. */
+export const DAY_CYCLE_MS = 120_000;

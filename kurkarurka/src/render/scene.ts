@@ -20,12 +20,14 @@ import {
   ROCK, ROCK_PAL, BIRD, BIRD_PAL, SPIDER, SPIDER_PAL, ORB, POWERUP_COLORS, POWERUP_GLYPHS,
   CLOUD, BUSH, COOP, COOP_PAL, BASKET, BASKET_PAL, type Palette,
 } from './sprites';
+import { dayLight, shade, shadePal, type DayLight } from './daynight';
 import type { PlayerData, EggData, EnemyData, FallingData, PowerupData } from '../core/types';
 
 const { Events } = Matter;
 
-/** Paleta sceny (zbliżona do NES). */
-const C = {
+/** Paleta sceny w pełnym świetle dziennym (zbliżona do NES) — pora dnia
+ *  domieszkowuje ją ambientem fazy przez shadePal (render/daynight.ts). */
+const PAL = {
   sky: '#5c94fc',
   cloud: '#fcfcfc',
   hill: '#00a800',
@@ -38,6 +40,10 @@ const C = {
   white: '#fcfcfc',
   dust: '#b8a888',
 };
+type ScenePal = typeof PAL;
+
+/** Arena bossa gra zawsze w mroku — stała nocna faza zamiast cyklu doby. */
+const BOSS_LIGHT: DayLight = { sky: '#343860', body: '#d8d8f0', moon: true, amb: '#4a5078', amt: 0.5 };
 
 const now = () => performance.now();
 
@@ -50,6 +56,9 @@ function wrapX(x: number, w: number, margin: number): number {
 export class SceneRenderer {
   /** Demo/attract mode — animowane sprite'y na tle ekranów tytułu/menu. */
   private demoOn = false;
+  /** Światło doby i wynikowa paleta sceny — draw() przelicza je raz na klatkę. */
+  private dl: DayLight = dayLight(0);
+  private C: ScenePal = PAL;
 
   /**
    * Wyłącza wygładzanie (ostre piksele) i podpina rysowanie sceny
@@ -76,6 +85,13 @@ export class SceneRenderer {
     const ctx = physics.render.context;
     const w = VIEW_W, h = VIEW_H;
     const ts = now();
+    // Pora dnia — arena bossa gra zawsze w mroku (stała faza nocna),
+    // reszta świata przechodzi cykl: noc -> świt -> dzień -> zmierzch.
+    // Niebo bierze kolor wprost z klucza fazy, a reszta świata dostaje
+    // domieszkę ambientu — kura, lisy i ziemia zmieniają odcień.
+    this.dl = levelState.bossArena ? BOSS_LIGHT : dayLight(ts);
+    this.C = shadePal(PAL, this.dl);
+    this.C.sky = this.dl.sky;
     // Przygoda z zbudowanym poziomem albo arena koszmaru — świat szerszy
     // niż ekran przewija się za graczem; menu/demo stoi na jednym ekranie.
     const adventure = gameState.mode === 'normal' && grounds.length > 0;
@@ -85,24 +101,39 @@ export class SceneRenderer {
       : 0;
     ctx.clearRect(0, 0, w, h);
 
-    // Niebo — płaski kolor (brak gradientów, to 8-bit); arena bossa w mroku
-    ctx.fillStyle = levelState.bossArena ? '#343860' : C.sky;
+    // Niebo — płaski kolor pory dnia (brak gradientów, to 8-bit)
+    ctx.fillStyle = this.C.sky;
     ctx.fillRect(0, 0, w, h);
 
-    // Pikselowe słońce — na arenie bossa blade jak księżyc
-    ctx.fillStyle = levelState.bossArena ? '#d8d8f0' : '#f8d800';
+    // Gwiazdy — tylko nocą, mrugają w deterministycznym rytmie
+    if (this.dl.moon) {
+      ctx.fillStyle = this.dl.body;
+      for (let i = 0; i < 14; i++) {
+        const sx = (i * 89 + 17) % w, sy = 6 + (i * 53 + 11) % 140;
+        if ((i + Math.floor(ts / 800)) % 4 !== 0) ctx.fillRect(sx, sy, 1, 1);
+      }
+    }
+
+    // Ciało niebieskie — pikselowe słońce za dnia; nocą "gryzek"
+    // w kolorze nieba wycina z tarczy sierp księżyca
+    ctx.fillStyle = this.dl.body;
     ctx.fillRect(w - 44, 16, 16, 16);
-    ctx.fillStyle = levelState.bossArena ? '#fcfcfc' : '#f8f878';
-    ctx.fillRect(w - 40, 20, 8, 8);
+    if (this.dl.moon) {
+      ctx.fillStyle = this.C.sky;
+      ctx.fillRect(w - 38, 18, 12, 12);
+    } else {
+      ctx.fillStyle = shade('#f8f878', this.dl);
+      ctx.fillRect(w - 40, 20, 8, 8);
+    }
 
     // Chmury — powolny dryf + parallax kamery, wrap poza ekranem
-    drawSprite(ctx, CLOUD, { C: C.cloud }, wrapX(30 + ts * 0.004 - camX * 0.35, w, 40), 34, 2);
-    drawSprite(ctx, CLOUD, { C: C.cloud }, wrapX(150 + ts * 0.0025 - camX * 0.3, w, 40), 56, 1);
+    drawSprite(ctx, CLOUD, { C: this.C.cloud }, wrapX(30 + ts * 0.004 - camX * 0.35, w, 40), 34, 2);
+    drawSprite(ctx, CLOUD, { C: this.C.cloud }, wrapX(150 + ts * 0.0025 - camX * 0.3, w, 40), 56, 1);
 
     // Wzgórza — schodkowe piramidy (jak w SMB), parallax kamery
-    this.drawHill(ctx, wrapX(30 - camX * 0.45, w, 60), h - GROUND_H, 70, 22, C.hill);
-    this.drawHill(ctx, wrapX(210 - camX * 0.45, w, 60), h - GROUND_H, 90, 30, C.hill);
-    this.drawHill(ctx, wrapX(130 - camX * 0.55, w, 40), h - GROUND_H, 40, 14, C.hillDark);
+    this.drawHill(ctx, wrapX(30 - camX * 0.45, w, 60), h - GROUND_H, 70, 22, this.C.hill);
+    this.drawHill(ctx, wrapX(210 - camX * 0.45, w, 60), h - GROUND_H, 90, 30, this.C.hill);
+    this.drawHill(ctx, wrapX(130 - camX * 0.55, w, 40), h - GROUND_H, 40, 14, this.C.hillDark);
 
     // ---- Warstwa świata (przesuwana kamerą w przygodzie) ----
     ctx.save();
@@ -115,7 +146,7 @@ export class SceneRenderer {
       // Krzaki na szerszych segmentach
       for (const g of grounds) {
         if (g.bounds.max.x - g.bounds.min.x > 90) {
-          drawSprite(ctx, BUSH, { G: C.hill }, g.bounds.min.x + 22, h - GROUND_H - 6, 1);
+          drawSprite(ctx, BUSH, { G: this.C.hill }, g.bounds.min.x + 22, h - GROUND_H - 6, 1);
         }
       }
     } else {
@@ -123,7 +154,7 @@ export class SceneRenderer {
       const groundLen = gameState.mode === 'hard' || levelState.bossArena ? levelState.len : w;
       this.drawGround(ctx, groundLen, h);
       for (let bx = 46; bx < groundLen - 30; bx += 144) {
-        drawSprite(ctx, BUSH, { G: C.hill }, bx + (bx * 31) % 37, h - GROUND_H - 6, 1);
+        drawSprite(ctx, BUSH, { G: this.C.hill }, bx + (bx * 31) % 37, h - GROUND_H - 6, 1);
       }
     }
 
@@ -143,7 +174,7 @@ export class SceneRenderer {
     // Cząsteczki — kwadratowe piksele
     for (const p of particles) {
       const r = Math.max(1, Math.round((p.body.circleRadius || 2) * p.life));
-      ctx.fillStyle = p.color === '#dust' ? C.dust : p.color;
+      ctx.fillStyle = shade(p.color === '#dust' ? this.C.dust : p.color, this.dl);
       ctx.globalAlpha = Math.max(0, p.life);
       ctx.fillRect(Math.round(p.body.position.x) - r, Math.round(p.body.position.y) - r, r * 2, r * 2);
       ctx.globalAlpha = 1;
@@ -213,8 +244,8 @@ export class SceneRenderer {
     for (let i = 0; i < 3; i++) {
       const fx = wrapX(300 - ts * 0.028 + i * 95, w, 30);
       const fb = Math.round(Math.sin(ts * 0.012 + i * 2) * 1);
-      drawSprite(ctx, FOX, FOX_PAL, fx, gy - 11 + fb, 2, false);
-      ctx.fillStyle = '#302010';
+      drawSprite(ctx, FOX, shadePal(FOX_PAL, this.dl), fx, gy - 11 + fb, 2, false);
+      ctx.fillStyle = shade('#302010', this.dl);
       const lp = Math.sin(ts * 0.012 + i) > 0 ? 1 : -1;
       ctx.fillRect(Math.round(fx) - 12, Math.round(gy) - 6, 2, 4 + lp);
       ctx.fillRect(Math.round(fx) + 4, Math.round(gy) - 6, 2, 4 - lp);
@@ -226,15 +257,15 @@ export class SceneRenderer {
     const jumpY = cyc < 0.28 ? -Math.sin((cyc / 0.28) * Math.PI) * 20 : 0;
     const cy = gy - 12 + Math.round(jumpY);
     const walking = jumpY === 0;
-    drawSprite(ctx, CHICKEN, CHICKEN_PAL, cx, cy, 2, false);
-    ctx.fillStyle = '#f8b800';
+    drawSprite(ctx, CHICKEN, shadePal(CHICKEN_PAL, this.dl), cx, cy, 2, false);
+    ctx.fillStyle = shade('#f8b800', this.dl);
     const lp = walking ? (Math.sin(ts * 0.02) > 0 ? 1 : -1) : 0;
     ctx.fillRect(Math.round(cx) - 5, Math.round(cy) + 11, 2, 4 + lp);
     ctx.fillRect(Math.round(cx) + 3, Math.round(cy) + 11, 2, 4 - lp);
 
     // Złote jajko unoszące się nad ziemią
     const ey = gy - 30 + Math.round(Math.sin(ts * 0.004) * 4);
-    drawSprite(ctx, EGG, { W: '#f8d800', S: '#b08800' }, w * 0.7, ey, 2);
+    drawSprite(ctx, EGG, shadePal({ W: '#f8d800', S: '#b08800' }, this.dl), w * 0.7, ey, 2);
   }
 
   /** Pasek statusu NES na górze obrazu: SC, serca, jajka, combo. */
@@ -282,11 +313,11 @@ export class SceneRenderer {
   /** Kafelki ziemi: trawa + dirt z deterministycznym ditheringiem. */
   private drawGround(ctx: CanvasRenderingContext2D, w: number, h: number): void {
     const top = h - GROUND_H;
-    ctx.fillStyle = C.dirt;
+    ctx.fillStyle = this.C.dirt;
     ctx.fillRect(0, top, w, GROUND_H);
 
     // Dithering dirta — deterministyczne ziarno per kafelek 8px
-    ctx.fillStyle = C.dirtDark;
+    ctx.fillStyle = this.C.dirtDark;
     for (let ty = top + 8; ty < h; ty += 8) {
       for (let tx = 0; tx < w; tx += 8) {
         const seed = (tx * 31 + ty * 17) % 5;
@@ -297,14 +328,14 @@ export class SceneRenderer {
     }
 
     // Wierzch trawy
-    ctx.fillStyle = C.black;
+    ctx.fillStyle = this.C.black;
     ctx.fillRect(0, top, w, 1);
-    ctx.fillStyle = C.grassLight;
+    ctx.fillStyle = this.C.grassLight;
     ctx.fillRect(0, top + 1, w, 3);
-    ctx.fillStyle = C.grass;
+    ctx.fillStyle = this.C.grass;
     ctx.fillRect(0, top + 4, w, 4);
     // Źdźbła — co drugi kafelek 8px
-    ctx.fillStyle = C.grass;
+    ctx.fillStyle = this.C.grass;
     for (let tx = 4; tx < w; tx += 16) {
       ctx.fillRect(tx, top - 3, 2, 3);
     }
@@ -318,11 +349,11 @@ export class SceneRenderer {
     const x0 = Math.round(g.bounds.min.x), x1 = Math.round(g.bounds.max.x);
     const top = VIEW_H - GROUND_H;
 
-    ctx.fillStyle = C.dirt;
+    ctx.fillStyle = this.C.dirt;
     ctx.fillRect(x0, top, x1 - x0, GROUND_H);
 
     // Dithering dirta — to samo ziarno co w drawGround, wycinane do segmentu
-    ctx.fillStyle = C.dirtDark;
+    ctx.fillStyle = this.C.dirtDark;
     for (let ty = top + 8; ty < VIEW_H; ty += 8) {
       for (let tx = Math.ceil(x0 / 8) * 8; tx + 6 <= x1; tx += 8) {
         const seed = (tx * 31 + ty * 17) % 5;
@@ -333,19 +364,19 @@ export class SceneRenderer {
     }
 
     // Klify na końcach segmentu — optycznie oddzielają przepaść
-    ctx.fillStyle = C.dirtDark;
+    ctx.fillStyle = this.C.dirtDark;
     ctx.fillRect(x0, top + 4, 3, GROUND_H - 4);
     ctx.fillRect(x1 - 3, top + 4, 3, GROUND_H - 4);
-    ctx.fillStyle = C.black;
+    ctx.fillStyle = this.C.black;
     ctx.fillRect(x0, top, 1, GROUND_H);
     ctx.fillRect(x1 - 1, top, 1, GROUND_H);
 
     // Wierzch trawy
-    ctx.fillStyle = C.black;
+    ctx.fillStyle = this.C.black;
     ctx.fillRect(x0, top, x1 - x0, 1);
-    ctx.fillStyle = C.grassLight;
+    ctx.fillStyle = this.C.grassLight;
     ctx.fillRect(x0, top + 1, x1 - x0, 3);
-    ctx.fillStyle = C.grass;
+    ctx.fillStyle = this.C.grass;
     ctx.fillRect(x0, top + 4, x1 - x0, 4);
     for (let tx = Math.ceil(x0 / 16) * 16 + 4; tx < x1 - 2; tx += 16) {
       ctx.fillRect(tx, top - 3, 2, 3);
@@ -356,11 +387,11 @@ export class SceneRenderer {
   private drawPlatform(ctx: CanvasRenderingContext2D, p: Matter.Body): void {
     const x0 = Math.round(p.bounds.min.x), x1 = Math.round(p.bounds.max.x);
     const y0 = Math.round(p.bounds.min.y), y1 = Math.round(p.bounds.max.y);
-    ctx.fillStyle = '#a05a18';
+    ctx.fillStyle = shade('#a05a18', this.dl);
     ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
-    ctx.fillStyle = '#f8b800';
+    ctx.fillStyle = shade('#f8b800', this.dl);
     ctx.fillRect(x0, y0, x1 - x0, 2);
-    ctx.fillStyle = '#5c2800';
+    ctx.fillStyle = shade('#5c2800', this.dl);
     ctx.fillRect(x0, y1 - 2, x1 - x0, 2);
     ctx.fillRect(x0, y0, 1, y1 - y0);
     ctx.fillRect(x1 - 1, y0, 1, y1 - y0);
@@ -370,9 +401,9 @@ export class SceneRenderer {
   private drawGoal(ctx: CanvasRenderingContext2D): void {
     const gx = Math.round(levelState.goalX);
     const top = VIEW_H - GROUND_H;
-    drawSprite(ctx, COOP, COOP_PAL, gx + 22, top - COOP.length * 2, 4);
+    drawSprite(ctx, COOP, shadePal(COOP_PAL, this.dl), gx + 22, top - COOP.length * 2, 4);
     // Koszyczek przed drzwiczkami kurnika
-    drawSprite(ctx, BASKET, BASKET_PAL, gx + 24, top - BASKET.length, 2);
+    drawSprite(ctx, BASKET, shadePal(BASKET_PAL, this.dl), gx + 24, top - BASKET.length, 2);
   }
 
   /**
@@ -382,13 +413,13 @@ export class SceneRenderer {
   private drawEgg(ctx: CanvasRenderingContext2D, e: Matter.Body): void {
     const golden = (e.gameData as EggData).golden;
     const pal: Palette = golden
-      ? { W: '#f8d800', S: '#b08800' }
-      : { W: C.white, S: '#c8c8c8' };
+      ? shadePal({ W: '#f8d800', S: '#b08800' }, this.dl)
+      : shadePal({ W: PAL.white, S: '#c8c8c8' }, this.dl);
     drawSprite(ctx, EGG, pal, e.position.x, e.position.y, 2);
     if (golden) {
       // błysk złotego jajka
       if (Math.sin(now() * 0.01) > 0) {
-        ctx.fillStyle = C.white;
+        ctx.fillStyle = this.C.white;
         ctx.fillRect(Math.round(e.position.x) + 8, Math.round(e.position.y) - 10, 2, 2);
       }
     }
@@ -402,7 +433,7 @@ export class SceneRenderer {
     const d = e.gameData as EnemyData;
     const px = d.r >= 24 ? 3 : 2;
     const bob = d.onGround ? Math.round(Math.sin(d.walkPhase) * 1) : 0;
-    const pal: Palette = { ...FOX_PAL, D: d.color };
+    const pal: Palette = { ...shadePal(FOX_PAL, this.dl), D: shade(d.color, this.dl) };
 
     const x = Math.round(e.position.x);
     const y = Math.round(e.position.y) + bob;
@@ -411,13 +442,13 @@ export class SceneRenderer {
     // Nogi — animacja 2-klatkowa
     const legH = px + 2;
     const phase = Math.sin(d.walkPhase) > 0 ? 1 : -1;
-    ctx.fillStyle = '#302010';
+    ctx.fillStyle = shade('#302010', this.dl);
     ctx.fillRect(x - 6 * px, y + 5 * px, px, legH + phase);
     ctx.fillRect(x + 2 * px, y + 5 * px, px, legH - phase);
 
     // Korona bossa
     if (d.type === 'boss') {
-      ctx.fillStyle = '#f8d800';
+      ctx.fillStyle = shade('#f8d800', this.dl);
       const cx = x - 5, cy = y - 10 * px;
       ctx.fillRect(cx, cy, 10, 3);
       ctx.fillRect(cx, cy - 3, 2, 3);
@@ -427,7 +458,7 @@ export class SceneRenderer {
 
     // Paski HP dla tanków i bossa — węższe przy dużym HP wilków z aren
     if (d.hp > 1) {
-      ctx.fillStyle = '#f83800';
+      ctx.fillStyle = shade('#f83800', this.dl);
       const pw = d.hp > 10 ? 3 : 6;
       for (let hp = 0; hp < d.hp - 1; hp++) {
         ctx.fillRect(x - d.r + hp * (pw + 2), y - d.r - 6, pw, 3);
@@ -445,11 +476,11 @@ export class SceneRenderer {
     const y = Math.round(p.position.y);
     const flip = d.facing < 0;
 
-    drawSprite(ctx, CHICKEN, CHICKEN_PAL, x, y, 2, flip);
+    drawSprite(ctx, CHICKEN, shadePal(CHICKEN_PAL, this.dl), x, y, 2, flip);
 
     // Nogi — 2-klatkowa animacja chodzenia / skulenie w locie
     const ly = y + 11;
-    ctx.fillStyle = '#f8b800';
+    ctx.fillStyle = shade('#f8b800', this.dl);
     if (d.onGround) {
       const phase = Math.sin(d.walkPhase) > 0 ? 1 : -1;
       ctx.fillRect(x - 5, ly, 2, 4 + phase);
@@ -460,7 +491,7 @@ export class SceneRenderer {
     }
     // Machanie skrzydłem w locie — piksel nad tułowiem
     if (!d.onGround && Math.sin(now() * 0.03) > 0) {
-      ctx.fillStyle = '#b0b0b0';
+      ctx.fillStyle = shade('#b0b0b0', this.dl);
       ctx.fillRect(x - (flip ? -12 : 12), y - 2, 3, 4);
     }
   }
@@ -496,11 +527,11 @@ export class SceneRenderer {
     const d = o.gameData as FallingData;
     if (d.type === 'bird') {
       const flap = Math.sin(now() * 0.02) > 0 ? -2 : 0;
-      drawSprite(ctx, BIRD, BIRD_PAL, o.position.x, o.position.y + flap, 2);
+      drawSprite(ctx, BIRD, shadePal(BIRD_PAL, this.dl), o.position.x, o.position.y + flap, 2);
     } else if (d.type === 'spider') {
-      drawSprite(ctx, SPIDER, SPIDER_PAL, o.position.x, o.position.y, 2);
+      drawSprite(ctx, SPIDER, shadePal(SPIDER_PAL, this.dl), o.position.x, o.position.y, 2);
     } else {
-      drawSprite(ctx, ROCK, ROCK_PAL, o.position.x, o.position.y, 2);
+      drawSprite(ctx, ROCK, shadePal(ROCK_PAL, this.dl), o.position.x, o.position.y, 2);
     }
   }
 

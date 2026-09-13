@@ -5,8 +5,11 @@ TypeScript + Matter.js, kompilowana do **jednego offline'owego pliku HTML** —
 można go otworzyć bez serwera i bez internetu.
 
 Wizualnie: stała rozdzielczość 256×240 skalowana przez `image-rendering: pixelated`,
-sprite'y rysowane z map znakowych (`render.ts`), kafelkowe tło, dithering,
-scanliny CRT. Audio: kanały w stylu NES (square/triangle/noise, WebAudio).
+sprite'y rysowane z map znakowych (`sprites.ts`), kafelkowe tło, dithering,
+scanliny CRT. Płynny cykl doby (`daynight.ts`) domieszkowuje ambient fazy do
+kolorów świata — świt, dzień, zmierzch i noc zmieniają odcień ziemi, kurki
+i lisów; nocą na niebie sierp księżyca i gwiazdy. Audio: kanały w stylu NES
+(square/triangle/noise, WebAudio).
 
 ## Wymagania
 
@@ -68,6 +71,7 @@ src/
     game.ts           — Game: pętla rozgrywki (beforeUpdate), start(mode), gameOver
   render/
     sprites.ts        — atlas sprite'ów (mapy znakowe + palety) i rasteryzer
+    daynight.ts       — cykl doby: klucze faz, miks ambientu, cieniowanie palet
     scene.ts          — SceneRenderer: klatka gry, HUD, demo attract-mode, CRT
   audio/
     audio.ts          — AudioSystem: SFX WebAudio + muzyka (mp3 / chiptune fallback)
