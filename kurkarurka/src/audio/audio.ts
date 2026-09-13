@@ -14,7 +14,8 @@ import type { GameMode } from '../core/types';
 export class AudioSystem {
   /** Współdzielony kontekst WebAudio dla wszystkich efektów i muzyki (leniwy). */
   private ctx: AudioContext | null = null;
-  private muted = false;
+  /** Wyciszenie muzyki — przycisk 🔇 odcina tylko muzykę, SFX grają dalej. */
+  private musicMuted = false;
   /** Elementy <audio> z osadzonymi mp3 — rejestrowane przez konstruktor. */
   private musicEl: HTMLAudioElement | null;
   private musicHardEl: HTMLAudioElement | null;
@@ -51,24 +52,26 @@ export class AudioSystem {
     return this.ctx;
   }
 
-  /** Wyciszenie globalne — odcina i efekty, i muzykę. */
-  setMuted(v: boolean): void {
-    this.muted = v;
+  /** Wyciszenie muzyki — efekty SFX nie są objęte. */
+  setMusicMuted(v: boolean): void {
+    this.musicMuted = v;
   }
 
-  isMuted(): boolean {
-    return this.muted;
+  isMusicMuted(): boolean {
+    return this.musicMuted;
   }
 
   /**
-   * Przełącza wyciszenie i synchronizuje stan elementu <audio>.
-   * @returns nowy stan wyciszenia (true = wyciszone).
+   * Przełącza wyciszenie muzyki: synchronizuje elementy <audio>
+   * i zatrzymuje sekwenser chiptune. SFX grają niezależnie.
+   * @returns nowy stan wyciszenia muzyki (true = wyciszona).
    */
-  toggleMuted(): boolean {
-    this.setMuted(!this.muted);
-    if (this.musicEl) this.musicEl.muted = this.muted;
-    if (this.musicHardEl) this.musicHardEl.muted = this.muted;
-    return this.muted;
+  toggleMusicMuted(): boolean {
+    this.setMusicMuted(!this.musicMuted);
+    if (this.musicEl) this.musicEl.muted = this.musicMuted;
+    if (this.musicHardEl) this.musicHardEl.muted = this.musicMuted;
+    if (this.musicMuted) this.stopMusic();
+    return this.musicMuted;
   }
 
   /** Bufor białego szumu 0.5 s — tworzony raz, używany przez wszystkie trzaski. */
@@ -86,7 +89,6 @@ export class AudioSystem {
    * Obwiednia exp-down do ~0 na końcu (klasyczny dźwięk chiptune).
    */
   noise(duration: number, when: number, vol = 0.1, filterFreq = 4000): void {
-    if (this.muted) return;
     const c = this.getCtx();
     const src = c.createBufferSource();
     src.buffer = this.getNoiseBuf(c);
@@ -106,7 +108,6 @@ export class AudioSystem {
    * portamento (narastanie/opadanie wysokości) — np. skok, przegrana.
    */
   tone(freq: number, type: OscillatorType, duration: number, when: number, vol = 0.08, slideTo: number | null = null): void {
-    if (this.muted) return;
     const c = this.getCtx();
     const osc = c.createOscillator();
     const gain = c.createGain();
@@ -259,7 +260,7 @@ export class AudioSystem {
   runAudio(fn: (c: AudioContext) => void, isActive: () => boolean): void {
     const c = this.getCtx();
     void c.resume().then(() => {
-      if (this.muted || !isActive() || c.state !== 'running') return;
+      if (!isActive() || c.state !== 'running') return;
       fn(c);
     }, () => { /* autoplay zablokowany */ });
   }
@@ -275,7 +276,7 @@ export class AudioSystem {
    * ścieżkę, a gdy i to się nie powiedzie — przechodzi na chiptune.
    */
   async tryPlay(mode: GameMode = 'normal'): Promise<void> {
-    if (this.muted) return;
+    if (this.musicMuted) return;
     const [first, second] = mode === 'hard'
       ? [this.musicHardEl, this.musicEl]
       : [this.musicEl, this.musicHardEl];

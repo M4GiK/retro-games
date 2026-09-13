@@ -11,7 +11,7 @@
  *   fizyka -> świat -> wejście -> pętla gry -> renderer -> ekrany (splash).
  * Menu po wejściu gracza woła onStart -> game.start + start muzyki.
  */
-import { gameState } from './core/state';
+import { gameState, levelState } from './core/state';
 import { physics } from './engine/physics';
 import { EntityFactory } from './engine/factory';
 import { InputManager } from './systems/input';
@@ -55,10 +55,11 @@ game.init();
 renderer.init();
 screens.init();
 
-// Przycisk wyciszenia — globalny element chrome'u gry.
+// Przycisk wyciszenia muzyki — globalny element chrome'u gry (SFX grają dalej).
 const muteBtn = document.getElementById('mute') as HTMLButtonElement;
 muteBtn.addEventListener('click', async () => {
-  const m = audio.toggleMuted();
+  const m = audio.toggleMusicMuted();
   muteBtn.textContent = m ? '🔇' : '🔊';
-  if (!m) await audio.tryPlay(gameState.mode);
+  // Arena bossa gra ścieżkę koszmaru mimo trybu 'normal'.
+  if (!m) await audio.tryPlay(levelState.bossArena ? 'hard' : gameState.mode);
 });
