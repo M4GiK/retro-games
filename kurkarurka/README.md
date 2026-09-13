@@ -39,21 +39,30 @@ npm run typecheck  # tsc --noEmit
 
 ```
 src/
-  index.html   — szablon strony (CSS + markup), znacznik <!-- GAME_BUNDLE -->
-  main.ts      — punkt wejścia
-  state.ts     — współdzielony stan: world, gameState, tablice encji
-  types.ts     — typy gameData (PlayerData, EggData, EnemyData...) + augmentacja Matter.Body
-  physics.ts   — silnik, ciała świata, spawn encji, resize
-  input.ts     — klawiatura + ekranowy pad dotykowy (getMoveDir / initInput)
-  logic.ts     — HUD, przebieg rundy, pętla gry (beforeUpdate), startGame(mode)
-  splash.ts    — splash M4GIK SOFTWARE: animacja CRT (power-on/off) + jingle
-  menu.ts      — ekrany NES: splash → boot → tytuł → menu → ranking/wpis rekordu
-  rank.ts      — ranking lokalny (localStorage, top 5 z inicjałami)
-  render.ts    — rysowanie sceny i postaci (afterRender) + demo attract-mode
-  audio.ts     — efekty WebAudio + muzyka (mp3 online / chiptune offline)
-assets/        — Quarter_in_the_Slot.mp3 (osadzany w buildzie jako data URI)
-concept/       — stare wersje gry (referencja)
-dist/          — wynik kompilacji (pojedynczy plik HTML)
+  index.html          — szablon strony (CSS + markup), znacznik <!-- GAME_BUNDLE -->
+  main.ts             — punkt wejścia / korzeń kompozycji (składa systemy, DI)
+  core/
+    config.ts         — stałe strojenia: rozdzielczość, prędkości, interwały
+    types.ts          — typy gameData (PlayerData, EggData, EnemyData...) + augmentacja Matter.Body
+    state.ts          — stan sesji: gameState, efekty, rejestry encji (singleton)
+  engine/
+    physics.ts        — PhysicsEngine: fasada nad Matter.js, ciała stałe świata
+    factory.ts        — EntityFactory: tworzenie encji (jajka, lisy, boss, bonusy, fx)
+  systems/
+    input.ts          — InputManager: klawiatura + ekranowy pad dotykowy
+    game.ts           — Game: pętla rozgrywki (beforeUpdate), start(mode), gameOver
+  render/
+    sprites.ts        — atlas sprite'ów (mapy znakowe + palety) i rasteryzer
+    scene.ts          — SceneRenderer: klatka gry, HUD, demo attract-mode, CRT
+  audio/
+    audio.ts          — AudioSystem: SFX WebAudio + muzyka (mp3 / chiptune fallback)
+  ui/
+    screens.ts        — ScreenManager: maszyna stanów ekranów i nawigacja
+    splash.ts         — SplashScreen: animacja CRT (power-on/off) + jingle
+    leaderboard.ts    — Leaderboard: repozytorium rekordów (localStorage, top 5)
+assets/               — Quarter_in_the_Slot.mp3 (osadzany w buildzie jako data URI)
+concept/              — stare wersje gry (referencja)
+dist/                 — wynik kompilacji (pojedynczy plik HTML)
 ```
 
 ## Uwagi
@@ -61,6 +70,6 @@ dist/          — wynik kompilacji (pojedynczy plik HTML)
 - Muzyka: `assets/Quarter_in_the_Slot.mp3` jest osadzana w buildzie jako
   data URI — `build.mjs` podmienia `__MUSIC_SRC__` w `src/index.html`.
   Gdy odtworzenie mp3 się nie powiedzie, gra odpala syntezowany
-  chiptune (`startMusic` w `audio.ts`).
-- Dane encji siedzą w `body.gameData` — typy zdefiniowane w `types.ts`,
+  chiptune (`AudioSystem.startMusic` w `audio/audio.ts`).
+- Dane encji siedzą w `body.gameData` — typy zdefiniowane w `core/types.ts`,
   rzutowanie przez `as PlayerData` / `as EggData` / `as EnemyData`.

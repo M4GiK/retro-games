@@ -1,13 +1,21 @@
-// Typy danych gry + rozszerzenie Matter.Body o pole gameData.
+/**
+ * Definicje typów danych gry.
+ *
+ * Encje gry to ciała Matter.js, a ich atrybuty grywalnościowe siedzą
+ * w polu `body.gameData` — tu zdefiniowane są kształty tych danych
+ * (kontrakt między fabryką encji, logiką a rendererem).
+ * Wybór konkretnego interfejsu zależy od `body.label`.
+ */
 import type * as Matter from 'matter-js';
 
 declare module 'matter-js' {
   interface Body {
-    // Dane gry przypięte do ciała fizycznego (kształt zależy od body.label).
+    /** Dane gry przypięte do ciała fizycznego (kształt zależy od body.label). */
     gameData: any;
   }
 }
 
+/** Dane kurki sterowanej przez gracza. */
 export interface PlayerData {
   onGround: boolean;  // stoi na ziemi (warunek skoku i animacji chodu)
   jumps: number;      // skoki wykonane od oderwania od ziemi
@@ -17,16 +25,20 @@ export interface PlayerData {
   squash: number;     // spłaszczenie po lądaniu/skokach (zanika 1 -> 0)
 }
 
+/** Dane spadającego jajka do zebrania. */
 export interface EggData {
   spin: number;      // prędkość obrotu w locie
   golden: boolean;   // złote jajko — 5x więcej punktów
   hue: number;       // odcień (zarezerwowane, nieużywane)
 }
 
+/** Tryb gry wybierany w menu: normalna przygoda albo koszmar. */
 export type GameMode = 'normal' | 'hard';
 
+/** Typy wrogów (lisów) — determinują parametry i zachowanie AI. */
 export type EnemyType = 'walker' | 'jumper' | 'dasher' | 'tank' | 'boss';
 
+/** Dane wroga (lisa) — w tym bossa (EnemyType 'boss'). */
 export interface EnemyData {
   type: EnemyType;
   r: number;             // promień ciała — baza kolizji i skali sprite'a
@@ -44,26 +56,32 @@ export interface EnemyData {
   nextAttack: number;    // boss: czas następnego zrzutu przeszkody (ms)
 }
 
+/** Typy spadających przeszkód (różnią się tylko spritem). */
 export type FallingType = 'rock' | 'bird';
 
+/** Dane spadającej przeszkody (kamień / ptak). */
 export interface FallingData {
   type: FallingType;  // rock = kamień, bird = ptak (tylko inny sprite)
   rotation: number;   // prędkość obrotu w locie
 }
 
+/** Typy bonusów do odebrania. */
 export type PowerupType = 'life' | 'shield' | 'magnet' | 'slow' | 'double';
 
+/** Dane power-upa. */
 export interface PowerupData {
   type: PowerupType;  // rodzaj bonusu do odebrania
   spin: number;       // prędkość obrotu w locie
 }
 
+/** Cząsteczka efektu (kurz, iskry) — ciało fizyczne z czasem życia. */
 export interface Particle {
   body: Matter.Body;
   life: number;   // 1 -> 0: skaluje rozmiar i przezroczystość
   color: string;  // '#dust' = kolor kurzu z palety sceny
 }
 
+/** Wyskakujący tekst punktowy unoszący się w górę. */
 export interface Popup {
   x: number;
   y: number;
@@ -73,7 +91,7 @@ export interface Popup {
   vy: number;     // prędkość unoszenia (ujemna = w górę)
 }
 
-// Pozostały czas efektów power-upów w ms (0 = nieaktywny).
+/** Pozostały czas efektów power-upów w ms (0 = nieaktywny). */
 export interface ActiveEffects {
   shield: number;      // osłona — amortyzuje jedno trafienie
   magnet: number;      // przyciąga jajka w promieniu ~90 px
@@ -81,6 +99,7 @@ export interface ActiveEffects {
   doubleJump: number;  // +1 dodatkowy skok w powietrzu
 }
 
+/** Globalne liczniki rundy — źródło prawdy dla HUD i logiki. */
 export interface GameState {
   running: boolean;    // trwa runda (false na ekranach menu)
   score: number;
