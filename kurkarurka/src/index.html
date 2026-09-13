@@ -45,6 +45,8 @@ body.touch #pad{display:flex}
 .screen .hint{color:#7fa0c8;font-size:7px;line-height:1.8}
 .screen button{padding:14px 22px;border:3px solid #000;background:#ffcc00;color:#000;font-weight:700;font-size:10px;cursor:pointer;box-shadow:4px 4px 0 #fff;font-family:inherit}
 .screen button:active{transform:translate(4px,4px);box-shadow:0 0 0 #fff}
+.screen button.sel{border-color:#00e5ff;box-shadow:4px 4px 0 #00e5ff}
+.screen button.sel::before{content:'▶ '}
 /* splash M4GIK — pełny ekran, animacja CRT na własnym canvasie */
 #splash{background:#000;padding:0;cursor:pointer}
 #splashFx{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:contain;image-rendering:pixelated}
@@ -143,8 +145,9 @@ body.touch #pad{display:flex}
     <h2>Koniec gry</h2>
     <p id="overText">Twój wynik: 0</p>
     <p class="lore">Lisy odebrały ostatnie jajko... ale Robcio nigdy się nie poddaje.</p>
-    <button id="retry">Jeszcze raz</button>
+    <button id="retry" class="sel">Jeszcze raz</button>
     <button id="toTitle">Menu</button>
+    <p class="hint">↑↓ wybór · Enter OK · Esc menu</p>
   </div>
   <audio id="bgMusic" loop preload="auto">
     <source src="__MUSIC_SRC__" type="audio/mpeg"/>

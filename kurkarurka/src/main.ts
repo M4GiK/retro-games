@@ -63,3 +63,7 @@ muteBtn.addEventListener('click', async () => {
   // Arena bossa gra ścieżkę koszmaru mimo trybu 'normal'.
   if (!m) await audio.tryPlay(levelState.bossArena ? 'hard' : gameState.mode);
 });
+// Klawisz M robi to samo — wyciszenie dostępne też bez myszy.
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'm' || e.key === 'M') muteBtn.click();
+});

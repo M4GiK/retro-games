@@ -37,6 +37,7 @@ export class ScreenManager {
   // ---- Stan maszyny ----
   private current: Screen = 'splash';
   private menuSel = 0;
+  private overSel = 0;
   private currentMode: GameMode = 'normal';
   private splash: SplashScreen | null = null;
   private splashDone = false;
@@ -53,6 +54,7 @@ export class ScreenManager {
   // ---- Referencje DOM (rozwiązywane w init) ----
   private screens!: Record<Exclude<Screen, 'game'>, HTMLElement>;
   private menuItems!: HTMLElement[];
+  private overButtons!: HTMLButtonElement[];
   private rankList!: HTMLOListElement;
   private overText!: HTMLElement;
   private hsScoreEl!: HTMLElement;
@@ -115,8 +117,15 @@ export class ScreenManager {
     });
     el<HTMLButtonElement>('hsOk').addEventListener('click', () => this.hsConfirm());
 
-    el<HTMLButtonElement>('retry').addEventListener('click', () => this.activateRetry());
-    el<HTMLButtonElement>('toTitle').addEventListener('click', () => this.goTitle());
+    this.overButtons = [el<HTMLButtonElement>('retry'), el<HTMLButtonElement>('toTitle')];
+    this.overButtons.forEach((b, i) => {
+      b.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        this.overSel = i;
+        this.overRenderSel();
+        this.activateOverItem();
+      });
+    });
 
     // Splash M4GIK -> boot -> tytuł
     this.show('splash');
@@ -272,6 +281,8 @@ export class ScreenManager {
       this.show('hs');
     } else {
       this.overText.textContent = 'Twój wynik: ' + score + '  ·  Jajka: ' + eggsCollected;
+      this.overSel = 0;
+      this.overRenderSel();
       this.show('over');
     }
   }
@@ -281,6 +292,19 @@ export class ScreenManager {
     if (this.current !== 'over') return;
     this.show('game');
     this.deps.onStart(this.currentMode);
+  }
+
+  /** Podświetla wybrany przycisk na ekranie końca gry. */
+  private overRenderSel(): void {
+    this.overButtons.forEach((b, i) => b.classList.toggle('sel', i === this.overSel));
+  }
+
+  /** Aktywuje zaznaczoną opcję końca gry: kolejna runda albo powrót do menu. */
+  private activateOverItem(): void {
+    if (this.current !== 'over') return;
+    this.audio.playCollect();
+    if (this.overSel === 0) this.activateRetry();
+    else this.show('menu');
   }
 
   /**
@@ -323,8 +347,15 @@ export class ScreenManager {
         else if (k === 'Enter') this.hsConfirm();
         break;
       case 'over':
-        if (k === 'Enter') this.activateRetry();
-        else if (k === 'Escape') this.goTitle();
+        if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'ArrowDown' || k === 's' || k === 'S') {
+          this.overSel = (this.overSel + 1) % this.overButtons.length;
+          this.overRenderSel();
+          this.audio.playJump();
+        } else if (k === 'Enter' || k === ' ') {
+          this.activateOverItem();
+        } else if (k === 'Escape') {
+          this.show('menu');
+        }
         break;
       default:
         break;
