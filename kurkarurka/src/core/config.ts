@@ -24,18 +24,34 @@ export const W = () => VIEW_W;
 /** Wysokość świata gry (skrót funkcyjny dla czytelności wzorów). */
 export const H = () => VIEW_H;
 
-// ---- Gracz (kurka) ----
+// ---- Gracz (kurka) — fizyka w duchu Mario ----
 
 /** Promień ciała fizycznego kurki — baza kolizji i detekcji ziemi. */
 export const PLAYER_R = 14;
 /** Prędkość marszu w poziomie (px/tick przy 60 Hz). */
 export const MOVE_SPEED = 3.2;
-/** Pionowy impet nadawany przy skoku. */
-export const JUMP_VELOCITY = -10;
+/** Pionowy impet nadawany przy skoku (~70 px wysokości pełnego skoku). */
+export const JUMP_VELOCITY = -6.6;
+/** Dodatkowe przyspieszenie w dół podczas spadania — krótszy, "cięższy" łuk jak w Mario. */
+export const FALL_EXTRA_G = 0.22;
+/** Pułap prędkości spadania (px/tick). */
+export const MAX_FALL_SPEED = 10;
+/** Mnożnik prędkości wznoszenia po puszczeniu klawisza skoku (zmienna wysokość skoku). */
+export const JUMP_CUT = 0.45;
+/** Okno (ms) po zejściu z krawędzi, w którym skok jeszcze działa (coyote time). */
+export const COYOTE_MS = 90;
+/** Okno (ms) bufora skoku — wciśnięcie tuż przed lądowaniem wykona skok po dotknięciu ziemi. */
+export const JUMP_BUFFER_MS = 120;
+/** Interpolacja prędkości poziomej do celu na ziemi (0-1 na tick) — rozrzut/hamowanie. */
+export const MOVE_ACCEL_GROUND = 0.5;
+/** Interpolacja prędkości poziomej w powietrzu — mniejsza kontrola w locie. */
+export const MOVE_ACCEL_AIR = 0.32;
 /** Odbicie gracza w górę po stratowaniu wroga. */
-export const STOMP_BOUNCE = -8;
+export const STOMP_BOUNCE = -5.4;
 /** Poziomy odrzut gracza po otrzymaniu trafienia. */
 export const KNOCKBACK_X = 5.5;
+/** Nietykalność (ms) po otrzymaniu trafienia. */
+export const INVULN_MS = 1300;
 
 // ---- Zasoby rundy ----
 
@@ -47,12 +63,34 @@ export const MAX_LIVES = 5;
 export const MAX_COMBO = 8;
 /** Czas (ms), po którym seria zbierań bez straty jajka wygasa. */
 export const COMBO_WINDOW_MS = 2200;
+/** Pauza (ms) po stracie ostatniego życia — duszek odlatuje do nieba,
+ *  dopiero potem pokazuje się tablica wyników. */
+export const GAMEOVER_DELAY_MS = 2200;
 /** Górny limit poziomu trudności. */
-export const MAX_DIFFICULTY = 8;
+export const MAX_DIFFICULTY = 10;
 /** Co ile milisekund rundy trudność rośnie o 1. */
 export const DIFFICULTY_STEP_MS = 10_000;
-/** Boss pojawia się co tyle poziomów trudności. */
+/** Boss pojawia się co tyle poziomów trudności (koszmar). */
 export const BOSS_EVERY_LEVELS = 4;
+
+// ---- Arena bossa (przygoda: co BOSS_LEVEL_EVERY poziom) ----
+
+/** Co który poziom przygody jest areną bossa — 5 = po 4 zwykłych poziomach. */
+export const BOSS_LEVEL_EVERY = 5;
+/** Dodatkowe HP wilka-bossa za każdy tier areny (coraz twardszy). */
+export const BOSS_HP_PER_TIER = 3;
+/** Odstęp (ms) między zrzutami bossa — skraca się o tier * BOSS_ATTACK_STEP_MS. */
+export const BOSS_ATTACK_MS = 1500;
+export const BOSS_ATTACK_STEP_MS = 150;
+/** Interwał (ms) zrzutu głazów/pająków na arenie — skraca się z tierem. */
+export const BOSS_FALLING_MS = 2600;
+export const BOSS_FALLING_STEP_MS = 350;
+/** Interwał (ms) spadania jajek na arenie bossa. */
+export const BOSS_EGG_MS = 1200;
+/** Premia punktowa za pokonanie bossa (mnożona przez tier areny). */
+export const BOSS_CLEAR_PTS = 250;
+/** Pauza (ms) między pokonaniem bossa a startem kolejnego poziomu. */
+export const BOSS_CLEAR_DELAY_MS = 2400;
 
 // ---- Limity i interwały spawnów ----
 
@@ -64,3 +102,29 @@ export const FALLING_MAX = 3;
 export const POWERUP_MAX = 1;
 /** Minimalny odstęp (ms) między spawnami power-upów. */
 export const POWERUP_INTERVAL_MS = 12_000;
+
+// ---- Koszmar (arena przetrwania) ----
+
+/** Dodatkowe ekrany świata koszmaru w prawo od ekranu startowego. */
+export const NIGHTMARE_EXTRA_SCREENS = 4;
+/** Długość świata koszmaru w px (ekran startowy + ekrany w prawo). */
+export const NIGHTMARE_LEN = VIEW_W * (1 + NIGHTMARE_EXTRA_SCREENS);
+/** Opóźnienie (ms) pierwszego spawnu lisków po starcie rundy. */
+export const FOX_START_DELAY_MS = 9_000;
+/** Co ile zabitych lisków trudność rośnie o 1 (poza krokiem czasowym). */
+export const FOX_KILLS_PER_STEP = 5;
+
+// ---- Przygoda (tryb platformowy à la Mario) ----
+
+/** Długość poziomu 1 w px — każdy kolejny poziom jest dłuższy o LEVEL_LEN_STEP. */
+export const LEVEL_BASE_LEN = 1500;
+/** Przyrost długości poziomu na poziom (px). */
+export const LEVEL_LEN_STEP = 450;
+/** Maksymalna długość poziomu (px). */
+export const LEVEL_MAX_LEN = 5200;
+/** Szerokość bezpiecznego odcinka startowego i mety (bez dziur i wrogów). */
+export const LEVEL_SAFE_ZONE = 300;
+/** Wysokość pływających platform (px). */
+export const PLATFORM_H = 8;
+/** Punkty za ukończenie poziomu (mnożone przez numer poziomu). */
+export const LEVEL_CLEAR_PTS = 100;

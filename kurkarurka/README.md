@@ -24,15 +24,29 @@ npm run typecheck  # tsc --noEmit
 ## Jak grać
 
 - **Ruch:** `A`/`D` lub `←`/`→` · na dotyku — ekranowy pad `◀ ▶`
-- **Skok:** `W`, `↑` lub `spacja` (podwójny skok w powietrzu) · na dotyku — `⤒`
-  lub stuknięcie ekranu poza padem
-- **Cel:** zbieraj jajka (złote = 5× punktów), skacz lisom na łeb, unikaj
-  spadających przeszkód. Utrata jajka lub trafienie resetuje combo.
-- **Tryby:** `PRZYGODA` — od poziomu 1 · `KOSZMAR` — start na poziomie 4
-  z bossem od pierwszych sekund.
-- **Power-upy:** serce (+1 życie), tarcza, magnes na jajka, spowolnienie
-  czasu, dodatkowy skok.
-- **Boss:** co 4 poziom trudności — duży lis z 8 HP, zrzuca przeszkody.
+- **Skok:** `W`, `↑` lub `spacja` · na dotyku — `⤒` lub stuknięcie ekranu
+  poza padem. Fizyka à la Mario: przytrzymanie = wyższy skok, puszczenie
+  ucina wznoszenie; działa coyote time i bufor skoku przy lądowaniu.
+- **Tryby:**
+  - `PRZYGODA` — platformówka: przewijane poziomy z przepaściami,
+    platformami i patrolującymi lisami; zbieraj jajka i dotrzyj do gniazda
+    na końcu. Każdy kolejny poziom jest dłuższy i trudniejszy (nowe typy
+    wrogów, szersze dziury, ptaki przelatujące od poziomu 2). Co 5. poziom
+    to arena bossa: wielki wilk pod deszczem głazów i pająków — po
+    pokonaniu fanfara i powrót do przygody.
+  - `KOSZMAR` — arena przetrwania przewijana na 5 ekranów w prawo:
+    zbieraj jajka spadające po całej arenie, unikaj kamieni, skacz
+    liskom na łeb. Liski ruszają po ~9 s i gonią gracza — każde
+    zabite nasila tempo spawnów i co 5 zabójstw podnosi trudność
+    (trudność rośnie też co 10 s; boss co 4. poziom).
+- **Wspólne:** skok na łeb lisa = punkty (u Mario), utrata jajka lub
+  trafienie resetuje combo; trafienie daje chwilę nietykalności.
+- **Power-upy:** serce (+1 życie), tarcza, magnes na jajka (koszmar),
+  spowolnienie czasu, dodatkowy skok (w przygodzie jedyny sposób
+  na podwójny skok).
+- **Boss:** wielki wilk z 8+ HP, zrzuca przeszkody — w koszmarze co
+  4. poziom trudności; w przygodzie co 5. poziom to osobna arena (jajka,
+  głazy i pająki celowane w gracza), a każda kolejna arena jest twardsza.
 - Ranking top 5 z inicjałami trzymany jest lokalnie w `localStorage`.
 
 ## Struktura
@@ -47,7 +61,8 @@ src/
     state.ts          — stan sesji: gameState, efekty, rejestry encji (singleton)
   engine/
     physics.ts        — PhysicsEngine: fasada nad Matter.js, ciała stałe świata
-    factory.ts        — EntityFactory: tworzenie encji (jajka, lisy, boss, bonusy, fx)
+    factory.ts        — EntityFactory: tworzenie encji (jajka, lisy, bonusy, segmenty, platformy)
+    level.ts          — generator poziomów przygody (segmenty, przepaści, patrole, meta)
   systems/
     input.ts          — InputManager: klawiatura + ekranowy pad dotykowy
     game.ts           — Game: pętla rozgrywki (beforeUpdate), start(mode), gameOver
@@ -60,16 +75,18 @@ src/
     screens.ts        — ScreenManager: maszyna stanów ekranów i nawigacja
     splash.ts         — SplashScreen: animacja CRT (power-on/off) + jingle
     leaderboard.ts    — Leaderboard: repozytorium rekordów (localStorage, top 5)
-assets/               — Quarter_in_the_Slot.mp3 (osadzany w buildzie jako data URI)
+assets/               — mp3 per tryb: Quarter_in_the_Slot.mp3 (przygoda),
+                        The_Giant_s_Pounce.mp3 (koszmar) — data URI w buildzie
 concept/              — stare wersje gry (referencja)
 dist/                 — wynik kompilacji (pojedynczy plik HTML)
 ```
 
 ## Uwagi
 
-- Muzyka: `assets/Quarter_in_the_Slot.mp3` jest osadzana w buildzie jako
-  data URI — `build.mjs` podmienia `__MUSIC_SRC__` w `src/index.html`.
-  Gdy odtworzenie mp3 się nie powiedzie, gra odpala syntezowany
-  chiptune (`AudioSystem.startMusic` w `audio/audio.ts`).
+- Muzyka: utwory z `assets/` są osadzane w buildzie jako data URI —
+  `build.mjs` podmienia `__MUSIC_SRC__` (przygoda) i `__MUSIC_SRC_HARD__`
+  (koszmar) w `src/index.html`; `AudioSystem.tryPlay(mode)` wybiera
+  właściwą ścieżkę. Gdy odtworzenie mp3 się nie powiedzie, gra odpala
+  syntezowany chiptune (`AudioSystem.startMusic` w `audio/audio.ts`).
 - Dane encji siedzą w `body.gameData` — typy zdefiniowane w `core/types.ts`,
   rzutowanie przez `as PlayerData` / `as EggData` / `as EnemyData`.

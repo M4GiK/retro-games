@@ -29,15 +29,21 @@ physics.init(stage);
 physics.createWorld();
 
 // Systemy gry — zależności płyną od dołu (rdzeń) do góry (UI).
-const audio = new AudioSystem(document.getElementById('bgMusic') as HTMLAudioElement | null);
+const audio = new AudioSystem(
+  document.getElementById('bgMusic') as HTMLAudioElement | null,
+  document.getElementById('bgMusicHard') as HTMLAudioElement | null,
+);
 const factory = new EntityFactory();
-const input = new InputManager(stage, () => gameState.running, { onJump: () => game.tryJump() });
+const input = new InputManager(stage, () => gameState.running, {
+  onJump: () => game.tryJump(),
+  onExtraLife: () => game.cheatLife(),
+});
 const game = new Game(input, audio, factory, {
   onGameOver: (score, eggs) => screens.handleGameOver(score, eggs),
 });
 const renderer = new SceneRenderer();
 const screens = new ScreenManager(
-  { onStart: (mode) => { game.start(mode); void audio.tryPlay(); } },
+  { onStart: (mode) => { game.start(mode); void audio.tryPlay(mode); } },
   audio,
   renderer,
 );
@@ -54,5 +60,5 @@ const muteBtn = document.getElementById('mute') as HTMLButtonElement;
 muteBtn.addEventListener('click', async () => {
   const m = audio.toggleMuted();
   muteBtn.textContent = m ? '🔇' : '🔊';
-  if (!m) await audio.tryPlay();
+  if (!m) await audio.tryPlay(gameState.mode);
 });

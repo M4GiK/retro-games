@@ -12,13 +12,16 @@
 /** Callbacki zdarzeń wejścia wstrzykiwane z zewnątrz (Dependency Injection). */
 export interface InputHandlers {
   onJump: () => void;
+  onExtraLife: () => void;
 }
 
 export class InputManager {
   /** Zbiór aktualnie wciśniętych klawiszy (normalizowane do małych liter). */
   private readonly keys = new Set<string>();
-  /** Stan przycisków kierunkowych ekranowego pada. */
-  private readonly pad = { left: false, right: false };
+  /** Stan przycisków ekranowego pada (skok śledzony dla zmiennej wysokości skoku). */
+  private readonly pad = { left: false, right: false, jump: false };
+  /** Stuknięcie ekranu = krótki impuls "trzymanego" skoku (~160 ms = średni wyskok). */
+  private tapJumpUntil = 0;
 
   /**
    * @param stage   element sceny — na nim łapiemy dotknięcia "poza padem".
@@ -55,11 +58,19 @@ export class InputManager {
     return (r ? 1 : 0) - (l ? 1 : 0);
   }
 
+  /** Czy klawisz/przycisk skoku jest TRZYMANY — napędza cięcie skoku (fizyka à la Mario). */
+  isJumpHeld(): boolean {
+    return this.keys.has('w') || this.keys.has('arrowup') || this.keys.has(' ')
+      || this.pad.jump || performance.now() < this.tapJumpUntil;
+  }
+
   /** Czyści całe wejście — wywoływać przy starcie/resecie gry. */
   clear(): void {
     this.keys.clear();
     this.pad.left = false;
     this.pad.right = false;
+    this.pad.jump = false;
+    this.tapJumpUntil = 0;
     document.querySelectorAll('#pad button.is-down').forEach(b => b.classList.remove('is-down'));
   }
 
@@ -71,6 +82,7 @@ export class InputManager {
       if (e.repeat) return;
       this.keys.add(k);
       if (k === 'w' || k === 'arrowup' || k === ' ') this.handlers.onJump();
+      if (k === 'h') this.handlers.onExtraLife();
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.key.toLowerCase()));
     // Utrata fokusu okna (alt-tab) — inaczej wciśnięty klawisz "zawiesza" ruch.
@@ -90,24 +102,14 @@ export class InputManager {
     }, { passive: true });
   }
 
-  /** Ekranowy gamepad: ◀ ▶ przytrzymywane, ⤒ odpala skok na wciśnięcie. */
+  /** Ekranowy gamepad: ◀ ▶ przytrzymywane, ⤒ skok (przytrzymanie = wyższy skok). */
   private bindPad(): void {
     const padLeft = document.getElementById('padLeft');
     const padRight = document.getElementById('padRight');
     const padJump = document.getElementById('padJump');
     if (padLeft) this.bindHold(padLeft, v => { this.pad.left = v; });
     if (padRight) this.bindHold(padRight, v => { this.pad.right = v; });
-    if (padJump) {
-      padJump.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        padJump.classList.add('is-down');
-        this.handlers.onJump();
-      });
-      const up = () => padJump.classList.remove('is-down');
-      padJump.addEventListener('pointerup', up);
-      padJump.addEventListener('pointerleave', up);
-      padJump.addEventListener('pointercancel', up);
-    }
+    if (padJump) this.bindHold(padJump, v => { this.pad.jump = v; }, () => this.handlers.onJump());
   }
 
   /** Dotknięcie sceny POZA padem = skok (wygodne przy grze jedną ręką). */
@@ -115,19 +117,21 @@ export class InputManager {
     this.stage.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'touch' || !this.canAct()) return;
       if ((e.target as HTMLElement).closest('#pad')) return;
+      this.tapJumpUntil = performance.now() + 160;
       this.handlers.onJump();
     });
   }
 
   /**
    * Podpina przycisk "przytrzymaj" — set(true) na wciśnięcie, set(false)
-   * na puszczenie/odjęcie palca/anulowanie gestu.
+   * na puszczenie/odjęcie palca/anulowanie gestu; opcjonalny onDown.
    */
-  private bindHold(btn: HTMLElement, set: (v: boolean) => void): void {
+  private bindHold(btn: HTMLElement, set: (v: boolean) => void, onDown?: () => void): void {
     const down = (e: PointerEvent) => {
       e.preventDefault();
       set(true);
       btn.classList.add('is-down');
+      onDown?.();
     };
     const up = () => {
       set(false);

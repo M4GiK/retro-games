@@ -17,12 +17,13 @@ declare module 'matter-js' {
 
 /** Dane kurki sterowanej przez gracza. */
 export interface PlayerData {
-  onGround: boolean;  // stoi na ziemi (warunek skoku i animacji chodu)
-  jumps: number;      // skoki wykonane od oderwania od ziemi
-  maxJumps: number;   // limit skoków (2 = podwójny skok w powietrzu)
-  facing: number;     // kierunek patrzenia: -1 lewo / 1 prawo
-  walkPhase: number;  // rosnący licznik fazy animacji nóg
-  squash: number;     // spłaszczenie po lądaniu/skokach (zanika 1 -> 0)
+  onGround: boolean;    // stoi na ziemi (warunek skoku i animacji chodu)
+  jumps: number;        // skoki wykonane od oderwania od ziemi
+  maxJumps: number;     // limit skoków (2 = podwójny skok w powietrzu)
+  facing: number;       // kierunek patrzenia: -1 lewo / 1 prawo
+  walkPhase: number;    // rosnący licznik fazy animacji nóg
+  squash: number;       // spłaszczenie po lądaniu/skokach (zanika 1 -> 0)
+  lastGroundAt: number; // timestamp ostatniego kontaktu z podłożem (coyote time)
 }
 
 /** Dane spadającego jajka do zebrania. */
@@ -32,7 +33,8 @@ export interface EggData {
   hue: number;       // odcień (zarezerwowane, nieużywane)
 }
 
-/** Tryb gry wybierany w menu: normalna przygoda albo koszmar. */
+/** Tryb gry wybierany w menu: 'normal' = przygoda (platformówka),
+ *  'hard' = koszmar (przetrwanie pod zrzutem jajek). */
 export type GameMode = 'normal' | 'hard';
 
 /** Typy wrogów (lisów) — determinują parametry i zachowanie AI. */
@@ -42,7 +44,10 @@ export type EnemyType = 'walker' | 'jumper' | 'dasher' | 'tank' | 'boss';
 export interface EnemyData {
   type: EnemyType;
   r: number;             // promień ciała — baza kolizji i skali sprite'a
-  speed: number;         // prędkość marszu w lewo (rośnie ze score)
+  speed: number;         // prędkość marszu (rośnie z trudnością i score)
+  dirX: number;          // kierunek marszu: -1 lewo / 1 prawo
+  patrolMin: number;     // lewa granica patrolu (przygoda); -inf = bez granicy
+  patrolMax: number;     // prawa granica patrolu (przygoda); +inf = bez granicy
   walkPhase: number;     // faza animacji nóg
   facing: number;        // -1 lewo / 1 prawo (flip sprite'a)
   onGround: boolean;
@@ -51,18 +56,21 @@ export interface EnemyData {
   nextJumpTime: number;  // najwcześniejszy moment kolejnego skoku (ms)
   chaseRange: number;    // zasięg wykrycia gracza przez skoczka (px)
   jumpCooldown: number;  // odstęp między skokami (ms)
-  hp: number;            // życie: zwykły 1, tank 3, boss 8
+  hp: number;            // życie: zwykły 1, tank 3, boss 8+
   color: string;         // kolor sierści lisa
   nextAttack: number;    // boss: czas następnego zrzutu przeszkody (ms)
+  attackMs: number;      // boss: odstęp między zrzutami (ms)
 }
 
 /** Typy spadających przeszkód (różnią się tylko spritem). */
-export type FallingType = 'rock' | 'bird';
+export type FallingType = 'rock' | 'bird' | 'spider';
 
 /** Dane spadającej przeszkody (kamień / ptak). */
 export interface FallingData {
-  type: FallingType;  // rock = kamień, bird = ptak (tylko inny sprite)
-  rotation: number;   // prędkość obrotu w locie
+  type: FallingType;   // rock = kamień, bird = ptak (tylko inny sprite)
+  rotation: number;    // prędkość obrotu w locie
+  flyer: boolean;      // przygoda: ptak leci poziomo (kinematycznie, bez grawitacji)
+  flySpeed: number;    // prędkość lotu poziomego dla flyerów (px/tick)
 }
 
 /** Typy bonusów do odebrania. */
@@ -101,12 +109,15 @@ export interface ActiveEffects {
 
 /** Globalne liczniki rundy — źródło prawdy dla HUD i logiki. */
 export interface GameState {
-  running: boolean;    // trwa runda (false na ekranach menu)
+  running: boolean;      // trwa runda (false na ekranach menu)
+  mode: GameMode;        // 'normal' przygoda / 'hard' koszmar
   score: number;
   lives: number;
-  collected: number;   // zebrane jajka — statystyka do rankingu
-  combo: number;       // mnożnik punktów za serię bez straty jajka
-  comboTimer: number;  // czas do wygaśnięcia combo (ms)
-  difficulty: number;  // poziom 1-8, rośnie co 10 s rundy
-  bossActive: boolean; // boss żyje na planszy
+  collected: number;     // zebrane jajka — statystyka do rankingu
+  combo: number;         // mnożnik punktów za serię bez straty jajka
+  comboTimer: number;    // czas do wygaśnięcia combo (ms)
+  difficulty: number;    // koszmar: rośnie co 10 s; przygoda: = numer poziomu
+  level: number;         // przygoda: numer poziomu (0 w koszmarze)
+  invulnUntil: number;   // timestamp końca nietykalności po trafieniu (ms)
+  bossActive: boolean;   // boss żyje na planszy
 }

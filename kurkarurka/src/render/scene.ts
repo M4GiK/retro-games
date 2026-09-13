@@ -1,3 +1,4 @@
+
 /**
  * Renderer sceny — warstwa prezentacji gry.
  *
@@ -12,12 +13,12 @@
  */
 import * as Matter from 'matter-js';
 import { GROUND_H, VIEW_W, VIEW_H } from '../core/config';
-import { gameState, activeEffects, eggs, enemies, fallingObstacles, powerups, particles, popups } from '../core/state';
+import { gameState, activeEffects, eggs, enemies, fallingObstacles, powerups, particles, popups, grounds, platforms, levelState, ghost } from '../core/state';
 import { physics } from '../engine/physics';
 import {
-  drawSprite, CHICKEN, CHICKEN_PAL, FOX, FOX_PAL, EGG, HEART, HEART_PAL,
-  ROCK, ROCK_PAL, BIRD, BIRD_PAL, ORB, POWERUP_COLORS, POWERUP_GLYPHS,
-  CLOUD, BUSH, type Palette,
+  drawSprite, CHICKEN, CHICKEN_PAL, GHOST_PAL, FOX, FOX_PAL, EGG, HEART, HEART_PAL,
+  ROCK, ROCK_PAL, BIRD, BIRD_PAL, SPIDER, SPIDER_PAL, ORB, POWERUP_COLORS, POWERUP_GLYPHS,
+  CLOUD, BUSH, COOP, COOP_PAL, BASKET, BASKET_PAL, type Palette,
 } from './sprites';
 import type { PlayerData, EggData, EnemyData, FallingData, PowerupData } from '../core/types';
 
@@ -68,51 +69,76 @@ export class SceneRenderer {
   /**
    * Pełna klatka: niebo, parallax, ziemia, encje, demo/HUD, cząsteczki,
    * popupy, efekty power-upów i na końcu scanliny CRT.
+   * W przygodzie świat przewija się za graczem — warstwa świata jest
+   * rysowana w transformacji kamery (HUD i ekrany pozostają na miejscu).
    */
   private draw(): void {
     const ctx = physics.render.context;
     const w = VIEW_W, h = VIEW_H;
     const ts = now();
+    // Przygoda z zbudowanym poziomem albo arena koszmaru — świat szerszy
+    // niż ekran przewija się za graczem; menu/demo stoi na jednym ekranie.
+    const adventure = gameState.mode === 'normal' && grounds.length > 0;
+    const wideWorld = adventure || gameState.mode === 'hard' || levelState.bossArena;
+    const camX = wideWorld
+      ? Math.max(0, Math.min(physics.player.position.x - 90, levelState.len - w))
+      : 0;
     ctx.clearRect(0, 0, w, h);
 
-    // Niebo — płaski kolor (brak gradientów, to 8-bit)
-    ctx.fillStyle = C.sky;
+    // Niebo — płaski kolor (brak gradientów, to 8-bit); arena bossa w mroku
+    ctx.fillStyle = levelState.bossArena ? '#343860' : C.sky;
     ctx.fillRect(0, 0, w, h);
 
-    // Pikselowe słońce
-    ctx.fillStyle = '#f8d800';
+    // Pikselowe słońce — na arenie bossa blade jak księżyc
+    ctx.fillStyle = levelState.bossArena ? '#d8d8f0' : '#f8d800';
     ctx.fillRect(w - 44, 16, 16, 16);
-    ctx.fillStyle = '#f8f878';
+    ctx.fillStyle = levelState.bossArena ? '#fcfcfc' : '#f8f878';
     ctx.fillRect(w - 40, 20, 8, 8);
 
-    // Chmury — powolny dryf, wrap poza ekranem
-    drawSprite(ctx, CLOUD, { C: C.cloud }, wrapX(30 + ts * 0.004, w, 40), 34, 2);
-    drawSprite(ctx, CLOUD, { C: C.cloud }, wrapX(150 + ts * 0.0025, w, 40), 56, 1);
+    // Chmury — powolny dryf + parallax kamery, wrap poza ekranem
+    drawSprite(ctx, CLOUD, { C: C.cloud }, wrapX(30 + ts * 0.004 - camX * 0.35, w, 40), 34, 2);
+    drawSprite(ctx, CLOUD, { C: C.cloud }, wrapX(150 + ts * 0.0025 - camX * 0.3, w, 40), 56, 1);
 
-    // Wzgórza — schodkowe piramidy (jak w SMB), statyczne
-    this.drawHill(ctx, 30, h - GROUND_H, 70, 22, C.hill);
-    this.drawHill(ctx, 210, h - GROUND_H, 90, 30, C.hill);
-    this.drawHill(ctx, 130, h - GROUND_H, 40, 14, C.hillDark);
+    // Wzgórza — schodkowe piramidy (jak w SMB), parallax kamery
+    this.drawHill(ctx, wrapX(30 - camX * 0.45, w, 60), h - GROUND_H, 70, 22, C.hill);
+    this.drawHill(ctx, wrapX(210 - camX * 0.45, w, 60), h - GROUND_H, 90, 30, C.hill);
+    this.drawHill(ctx, wrapX(130 - camX * 0.55, w, 40), h - GROUND_H, 40, 14, C.hillDark);
 
-    // Ziemia — kafelki 16px: wierzch trawy + ditheringowany dirt
-    this.drawGround(ctx, w, h);
+    // ---- Warstwa świata (przesuwana kamerą w przygodzie) ----
+    ctx.save();
+    ctx.translate(-Math.round(camX), 0);
 
-    // Krzaki
-    drawSprite(ctx, BUSH, { G: C.hill }, 46, h - GROUND_H - 6, 1);
-    drawSprite(ctx, BUSH, { G: C.hill }, 190, h - GROUND_H - 6, 1);
+    if (adventure) {
+      for (const g of grounds) this.drawGroundSeg(ctx, g);
+      for (const p of platforms) this.drawPlatform(ctx, p);
+      this.drawGoal(ctx);
+      // Krzaki na szerszych segmentach
+      for (const g of grounds) {
+        if (g.bounds.max.x - g.bounds.min.x > 90) {
+          drawSprite(ctx, BUSH, { G: C.hill }, g.bounds.min.x + 22, h - GROUND_H - 6, 1);
+        }
+      }
+    } else {
+      // Koszmar / arena bossa / demo: ciągła ziemia + krzaki po długości świata
+      const groundLen = gameState.mode === 'hard' || levelState.bossArena ? levelState.len : w;
+      this.drawGround(ctx, groundLen, h);
+      for (let bx = 46; bx < groundLen - 30; bx += 144) {
+        drawSprite(ctx, BUSH, { G: C.hill }, bx + (bx * 31) % 37, h - GROUND_H - 6, 1);
+      }
+    }
 
     // Encje
     for (const e of eggs) this.drawEgg(ctx, e);
     for (const p of powerups) this.drawPowerup(ctx, p);
     for (const o of fallingObstacles) this.drawFalling(ctx, o);
     for (const en of enemies) this.drawEnemy(ctx, en);
-    this.drawChicken(ctx, physics.player);
-
-    // Demo attract-mode na ekranach menu
-    if (this.demoOn) this.drawDemo(ctx, w, h, ts);
-
-    // Pasek statusu NES — tylko w trakcie gry
-    if (gameState.running) this.drawHUD(ctx, w);
+    // Po ostatnim zgonie kurkę zastępuje odlatujący duszek;
+    // w trakcie rundy nietykalność po trafieniu — kurka mruga
+    if (ghost.active) {
+      this.drawGhost(ctx, ts);
+    } else if (gameState.invulnUntil <= physics.now || Math.floor(ts / 90) % 2 === 0) {
+      this.drawChicken(ctx, physics.player);
+    }
 
     // Cząsteczki — kwadratowe piksele
     for (const p of particles) {
@@ -157,6 +183,15 @@ export class SceneRenderer {
         ctx.fillRect(px + cx * r - 2, py + cy * r - 2, 1, 4);
       }
     }
+
+    ctx.restore();
+
+    // Demo attract-mode na ekranach menu
+    if (this.demoOn) this.drawDemo(ctx, w, h, ts);
+
+    // Pasek statusu NES — tylko w trakcie gry
+    if (gameState.running) this.drawHUD(ctx, w);
+
     if (activeEffects.slowTime > 0) {
       ctx.fillStyle = 'rgba(168, 56, 248, 0.15)';
       ctx.fillRect(0, 0, w, h);
@@ -214,13 +249,19 @@ export class SceneRenderer {
     ctx.fillStyle = '#fcfcfc';
     ctx.fillText('SC' + String(gameState.score).padStart(6, '0'), 4, 4);
 
-    for (let i = 0; i < Math.max(0, Math.min(5, gameState.lives)); i++) {
-      drawSprite(ctx, HEART, HEART_PAL, 106 + i * 9, 7, 1);
+    if (gameState.level > 0) {
+      ctx.fillStyle = '#fcfcfc';
+      ctx.fillText('LV' + gameState.level, 80, 4);
     }
 
-    drawSprite(ctx, EGG, { W: '#fcfcfc', S: '#b0b0b0' }, 170, 7, 1);
+    const heartsX = gameState.level > 0 ? 118 : 106;
+    for (let i = 0; i < Math.max(0, Math.min(5, gameState.lives)); i++) {
+      drawSprite(ctx, HEART, HEART_PAL, heartsX + i * 9, 7, 1);
+    }
+
+    drawSprite(ctx, EGG, { W: '#fcfcfc', S: '#b0b0b0' }, 174, 7, 1);
     ctx.fillStyle = '#fcfcfc';
-    ctx.fillText('x' + gameState.collected, 178, 4);
+    ctx.fillText('x' + gameState.collected, 182, 4);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = gameState.combo > 1 ? '#ffcc00' : '#4a5a78';
@@ -267,6 +308,71 @@ export class SceneRenderer {
     for (let tx = 4; tx < w; tx += 16) {
       ctx.fillRect(tx, top - 3, 2, 3);
     }
+  }
+
+  /**
+   * Segment ziemi trybu przygody — te same kafelki co drawGround,
+   * obcięte do [x0, x1], plus ciemne "klify" na końcach nad przepaścią.
+   */
+  private drawGroundSeg(ctx: CanvasRenderingContext2D, g: Matter.Body): void {
+    const x0 = Math.round(g.bounds.min.x), x1 = Math.round(g.bounds.max.x);
+    const top = VIEW_H - GROUND_H;
+
+    ctx.fillStyle = C.dirt;
+    ctx.fillRect(x0, top, x1 - x0, GROUND_H);
+
+    // Dithering dirta — to samo ziarno co w drawGround, wycinane do segmentu
+    ctx.fillStyle = C.dirtDark;
+    for (let ty = top + 8; ty < VIEW_H; ty += 8) {
+      for (let tx = Math.ceil(x0 / 8) * 8; tx + 6 <= x1; tx += 8) {
+        const seed = (tx * 31 + ty * 17) % 5;
+        if (seed === 0) ctx.fillRect(tx + 1, ty + 2, 3, 2);
+        if (seed === 2) ctx.fillRect(tx + 4, ty + 5, 2, 2);
+        if (seed === 4) ctx.fillRect(tx + 5, ty + 1, 2, 3);
+      }
+    }
+
+    // Klify na końcach segmentu — optycznie oddzielają przepaść
+    ctx.fillStyle = C.dirtDark;
+    ctx.fillRect(x0, top + 4, 3, GROUND_H - 4);
+    ctx.fillRect(x1 - 3, top + 4, 3, GROUND_H - 4);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x0, top, 1, GROUND_H);
+    ctx.fillRect(x1 - 1, top, 1, GROUND_H);
+
+    // Wierzch trawy
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x0, top, x1 - x0, 1);
+    ctx.fillStyle = C.grassLight;
+    ctx.fillRect(x0, top + 1, x1 - x0, 3);
+    ctx.fillStyle = C.grass;
+    ctx.fillRect(x0, top + 4, x1 - x0, 4);
+    for (let tx = Math.ceil(x0 / 16) * 16 + 4; tx < x1 - 2; tx += 16) {
+      ctx.fillRect(tx, top - 3, 2, 3);
+    }
+  }
+
+  /** Pływająca platforma — drewniana deska z jasnym wierzchem. */
+  private drawPlatform(ctx: CanvasRenderingContext2D, p: Matter.Body): void {
+    const x0 = Math.round(p.bounds.min.x), x1 = Math.round(p.bounds.max.x);
+    const y0 = Math.round(p.bounds.min.y), y1 = Math.round(p.bounds.max.y);
+    ctx.fillStyle = '#a05a18';
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    ctx.fillStyle = '#f8b800';
+    ctx.fillRect(x0, y0, x1 - x0, 2);
+    ctx.fillStyle = '#5c2800';
+    ctx.fillRect(x0, y1 - 2, x1 - x0, 2);
+    ctx.fillRect(x0, y0, 1, y1 - y0);
+    ctx.fillRect(x1 - 1, y0, 1, y1 - y0);
+  }
+
+  /** Meta poziomu przygody: kurnik + koszyczek ze złotymi jajkami. */
+  private drawGoal(ctx: CanvasRenderingContext2D): void {
+    const gx = Math.round(levelState.goalX);
+    const top = VIEW_H - GROUND_H;
+    drawSprite(ctx, COOP, COOP_PAL, gx + 22, top - COOP.length * 2, 4);
+    // Koszyczek przed drzwiczkami kurnika
+    drawSprite(ctx, BASKET, BASKET_PAL, gx + 24, top - BASKET.length, 2);
   }
 
   /**
@@ -358,12 +464,40 @@ export class SceneRenderer {
     }
   }
 
-  /** Przeszkoda spadająca: ptak z machaniem skrzydeł albo kamień. */
+  /**
+   * Duszek kurki po ostatnim zgonie: sylwetka w bladej palecie unosi się
+   * do nieba (lekkie kołysanie i machanie skrzydełkami), z aureolą nad
+   * głową; pod koniec pauzy rozpływa się w powietrzu.
+   */
+  private drawGhost(ctx: CanvasRenderingContext2D, ts: number): void {
+    const t = ts - ghost.startedAt;
+    const x = Math.round(ghost.x + Math.sin(t * 0.004) * 6);
+    const y = Math.round(ghost.y - t * 0.055);
+    ctx.globalAlpha = t < 1500 ? 0.85 : Math.max(0, 0.85 * (1 - (t - 1500) / 700));
+
+    // Aureola — złoty pierścień nad głową
+    ctx.fillStyle = '#f8d800';
+    ctx.fillRect(x - 5, y - 16, 10, 2);
+    ctx.fillRect(x - 3, y - 17, 6, 1);
+
+    drawSprite(ctx, CHICKEN, GHOST_PAL, x, y, 2);
+
+    // Machające skrzydełka — po obu stronach tułowia
+    const flap = Math.sin(ts * 0.02) > 0 ? 0 : 2;
+    ctx.fillStyle = '#e0f4ff';
+    ctx.fillRect(x - 16, y - 3 - flap, 4, 3);
+    ctx.fillRect(x + 12, y - 3 - flap, 4, 3);
+    ctx.globalAlpha = 1;
+  }
+
+  /** Przeszkoda spadająca: ptak z machaniem skrzydeł, pająk albo kamień. */
   private drawFalling(ctx: CanvasRenderingContext2D, o: Matter.Body): void {
     const d = o.gameData as FallingData;
     if (d.type === 'bird') {
       const flap = Math.sin(now() * 0.02) > 0 ? -2 : 0;
       drawSprite(ctx, BIRD, BIRD_PAL, o.position.x, o.position.y + flap, 2);
+    } else if (d.type === 'spider') {
+      drawSprite(ctx, SPIDER, SPIDER_PAL, o.position.x, o.position.y, 2);
     } else {
       drawSprite(ctx, ROCK, ROCK_PAL, o.position.x, o.position.y, 2);
     }

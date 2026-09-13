@@ -12,7 +12,7 @@
  */
 import * as Matter from 'matter-js';
 import { GROUND_H, VIEW_W, VIEW_H, W, H } from '../core/config';
-import { eggs, enemies, fallingObstacles, powerups, particles, popups } from '../core/state';
+import { eggs, enemies, fallingObstacles, powerups, particles, popups, grounds, platforms } from '../core/state';
 import type { PlayerData } from '../core/types';
 
 const { Engine, Render, Runner, Bodies, Composite, Body } = Matter;
@@ -87,7 +87,7 @@ export class PhysicsEngine {
       render: { visible: false },
     });
     player.label = 'player';
-    player.gameData = { onGround: false, jumps: 0, maxJumps: 2, facing: 1, walkPhase: 0, squash: 0 } as PlayerData;
+    player.gameData = { onGround: false, jumps: 0, maxJumps: 2, facing: 1, walkPhase: 0, squash: 0, lastGroundAt: 0 } as PlayerData;
     this.player = player;
 
     const ground = Bodies.rectangle(0, 0, 10000, GROUND_H, {
@@ -122,18 +122,40 @@ export class PhysicsEngine {
     fallingObstacles.forEach(o => Composite.remove(worldComposite, o));
     powerups.forEach(p => Composite.remove(worldComposite, p));
     particles.forEach(p => Composite.remove(worldComposite, p.body));
+    grounds.forEach(g => Composite.remove(worldComposite, g));
+    platforms.forEach(p => Composite.remove(worldComposite, p));
     enemies.length = 0;
     eggs.length = 0;
     fallingObstacles.length = 0;
     powerups.length = 0;
     particles.length = 0;
     popups.length = 0;
+    grounds.length = 0;
+    platforms.length = 0;
   }
 
-  /** Pozycja startowa gracza: lewa strona ekranu, na ziemi, zero prędkości. */
-  resetPlayer(): void {
-    Body.setPosition(this.player, { x: 48, y: H() - GROUND_H - 14 });
+  /**
+   * Przełącza geometrię świata pod tryb gry.
+   * Koszmar: jedna ciągła ziemia + prawa ściana na końcu areny (worldLen).
+   * Przygoda: ziemię zdejmujemy (rolę podłogi pełnią segmenty z dziurami),
+   * a prawą ścianę odsuwamy na koniec poziomu.
+   */
+  setAdventure(on: boolean, worldLen: number): void {
+    const world = this.engine.world;
+    const hasGround = Composite.get(world, this.ground.id, 'body') != null;
+    if (on && hasGround) Composite.remove(world, this.ground);
+    if (!on && !hasGround) Composite.add(world, this.ground);
+    Body.setPosition(this.rightWall, { x: worldLen + 30, y: H() / 2 });
+  }
+
+  /** Pozycja startowa gracza: na ziemi (lub pierwszym segmencie), zero prędkości. */
+  resetPlayer(x = 48): void {
+    Body.setPosition(this.player, { x, y: H() - GROUND_H - 14 });
     Body.setVelocity(this.player, { x: 0, y: 0 });
+    Body.setAngle(this.player, 0);
+    const d = this.player.gameData as PlayerData;
+    d.facing = 1;
+    d.jumps = 0;
   }
 }
 

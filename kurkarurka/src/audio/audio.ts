@@ -4,16 +4,20 @@
  * Klasa AudioSystem jest fasadą nad Web Audio API: syntezuje efekty
  * w kanałach w stylu NES (square/triangle/noise) i zarządza muzyką.
  *
- * Muzyka: "Quarter in the Slot" — mp3 osadzony w buildzie jako data URI
- * (#bgMusic); gdy odtworzenie się nie powiedzie, odpala syntezowany
+ * Muzyka: mp3 osadzone w buildzie jako data URI — #bgMusic dla przygody
+ * ("Quarter in the Slot"), #bgMusicHard dla koszmaru ("The Giant's
+ * Pounce"); gdy odtworzenie się nie powiedzie, odpala syntezowany
  * chiptune (sekwenser 8-krokowy) jako fallback offline.
  */
+import type { GameMode } from '../core/types';
+
 export class AudioSystem {
   /** Współdzielony kontekst WebAudio dla wszystkich efektów i muzyki (leniwy). */
   private ctx: AudioContext | null = null;
   private muted = false;
-  /** Element <audio> z osadzonym mp3 — rejestrowany przez konstruktor. */
+  /** Elementy <audio> z osadzonymi mp3 — rejestrowane przez konstruktor. */
   private musicEl: HTMLAudioElement | null;
+  private musicHardEl: HTMLAudioElement | null;
   /** Bufor białego szumu — "kanał szumu" NES (uderzenia, trzaski, perkusja). */
   private noiseBuf: AudioBuffer | null = null;
 
@@ -22,9 +26,11 @@ export class AudioSystem {
   private musicTimer: ReturnType<typeof setInterval> | null = null;
   private musicStep = 0;
 
-  /** @param musicEl element <audio> z osadzonym utworem mp3 (może być null). */
-  constructor(musicEl: HTMLAudioElement | null = null) {
+  /** @param musicEl     element <audio> z utworem przygody (może być null).
+   *  @param musicHardEl element <audio> z utworem koszmaru (może być null). */
+  constructor(musicEl: HTMLAudioElement | null = null, musicHardEl: HTMLAudioElement | null = null) {
     this.musicEl = musicEl;
+    this.musicHardEl = musicHardEl;
   }
 
   /** Bieżący czas zegara WebAudio — baza planowania nut i efektów. */
@@ -61,6 +67,7 @@ export class AudioSystem {
   toggleMuted(): boolean {
     this.setMuted(!this.muted);
     if (this.musicEl) this.musicEl.muted = this.muted;
+    if (this.musicHardEl) this.musicHardEl.muted = this.muted;
     return this.muted;
   }
 
@@ -142,11 +149,19 @@ export class AudioSystem {
     this.noise(0.15, t, 0.14, 500);
   }
 
-  /** Otrzymanie trafienia — opadający ton + trzask. */
-  playHurt(): void {
+  /** Zgon kurki — lament: pisk trafienia, opadający ton i trzask. */
+  playDeath(): void {
     const t = this.now;
-    this.tone(300, 'square', 0.25, t, 0.12, 80);
-    this.noise(0.2, t, 0.1, 1200);
+    this.tone(700, 'square', 0.08, t, 0.1, 480);
+    this.tone(320, 'square', 0.22, t + 0.08, 0.12, 120);
+    this.noise(0.15, t, 0.09, 1500);
+  }
+
+  /** Duszek kurki wznosi się do nieba — łagodny, wznoszący się ton. */
+  playSoul(): void {
+    const t = this.now;
+    this.tone(300, 'sine', 1.4, t, 0.07, 1200);
+    this.tone(600, 'sine', 1.4, t + 0.15, 0.05, 2400);
   }
 
   /** Koniec gry — długi zstępujący ton + szum. */
@@ -178,6 +193,19 @@ export class AudioSystem {
     this.tone(120, 'sawtooth', 0.6, t, 0.15, 50);
     this.tone(80, 'square', 0.5, t + 0.1, 0.12, 30);
     this.noise(0.5, t, 0.08, 300);
+  }
+
+  /** Fanfara po pokonaniu bossa — wznoszące arpeggio z finałowym akordem. */
+  playVictory(): void {
+    const t = this.now;
+    const notes = [392.0, 523.25, 659.25, 783.99, 659.25, 783.99, 1046.5];
+    notes.forEach((f, i) => {
+      this.tone(f, 'square', i === notes.length - 1 ? 0.8 : 0.12, t + i * 0.12, 0.09);
+    });
+    // Akord finałowy: bas + piąta na triangle, iskierki z szumu.
+    this.tone(196.0, 'triangle', 0.9, t + 0.72, 0.11);
+    this.tone(261.63, 'triangle', 0.9, t + 0.72, 0.08);
+    this.noise(0.3, t + 0.72, 0.04, 7000);
   }
 
   // ---- Muzyka: syntezowany chiptune (fallback offline) ----
@@ -215,10 +243,11 @@ export class AudioSystem {
     this.musicTimer = null;
   }
 
-  /** Zatrzymuje całą muzykę (chiptune + mp3) — np. przy game over. */
+  /** Zatrzymuje całą muzykę (chiptune + oba mp3) — np. przy game over. */
   stopAllMusic(): void {
     this.stopMusic();
     this.musicEl?.pause();
+    this.musicHardEl?.pause();
   }
 
   /**
@@ -241,17 +270,25 @@ export class AudioSystem {
     return c.resume().then(() => c.state === 'running', () => false);
   }
 
-  /** Próbuje odpalić mp3; przy braku sieci/źródła przechodzi na chiptune. */
-  async tryPlay(): Promise<void> {
+  /**
+   * Odpala mp3 właściwe dla trybu gry; przy braku źródła próbuje drugą
+   * ścieżkę, a gdy i to się nie powiedzie — przechodzi na chiptune.
+   */
+  async tryPlay(mode: GameMode = 'normal'): Promise<void> {
     if (this.muted) return;
-    if (this.musicEl) {
+    const [first, second] = mode === 'hard'
+      ? [this.musicHardEl, this.musicEl]
+      : [this.musicEl, this.musicHardEl];
+    second?.pause();
+    for (const el of [first, second]) {
+      if (!el) continue;
       try {
-        await this.musicEl.play();
+        await el.play();
         this.stopMusic();
-        this.musicEl.muted = false;
+        el.muted = false;
         return;
       } catch {
-        // offline / brak autoodtwarzania — fallback niżej
+        // brak pliku / zablokowane autoodtwarzanie — próbujemy dalej
       }
     }
     this.startMusic();

@@ -64,6 +64,11 @@ export const CHICKEN_PAL: Palette = {
   W: '#fcfcfc', S: '#b0b0b0', R: '#f83800', O: '#f8b800', E: '#000000',
 };
 
+/** Duszek kurki — ta sama sylwetka (CHICKEN) w eterycznej, błękitnej palecie. */
+export const GHOST_PAL: Palette = {
+  W: '#e0f4ff', S: '#a0d0e8', R: '#f8b0b0', O: '#f8e0b0', E: '#405060',
+};
+
 /** Lis zwrócony w LEWO: spiczaste uszy z czarnymi końcami, nosek (N),
  *  biały policzek i puszysty ogon z białym koniuszkiem uniesiony nad zad. */
 export const FOX = [
@@ -126,6 +131,18 @@ export const BIRD = [
 ];
 export const BIRD_PAL: Palette = { B: '#302838' };
 
+/** Pająk — wariacja przeszkody na arenie bossa. */
+export const SPIDER = [
+  '..SSSSSS..',
+  '.SSSSSSSS.',
+  'SSSSSSSSSS',
+  'S.SSSSSS.S',
+  'S..SSSS..S',
+  '..S.SS.S..',
+  '.S..SS..S.',
+];
+export const SPIDER_PAL: Palette = { S: '#483858' };
+
 /** Kulka power-upa + glif 5×5 w środku. */
 export const ORB = [
   '....PPPP....',
@@ -169,3 +186,36 @@ export const BUSH = [
   '.GGGGGGGGG.',
   'GGGGGGGGGGG',
 ];
+
+/** Kurnik — meta poziomu przygody (kurka wraca do kurnika). */
+export const COOP = [
+  '..........RRRR..........',
+  '........RRRRRRRR........',
+  '......RRRRRRRRRRRR......',
+  '....RRRRRRRRRRRRRRRR....',
+  '..RRRRRRRRRRRRRRRRRRRR..',
+  '..WWWWWWWWWWWWWWWWWWWW..',
+  '..WwWwWwWwWwWwWwWwWwWw..',
+  '..WwWwWwWwWwWwWwWwWwWw..',
+  '..WwWwWwWDDDDWwWwWwWwW..',
+  '..WwWwWwWDDDDWwWwWwWwW..',
+  '..WwWwWwWDDDDWwWwWwWwW..',
+  '..WwWwWwWDDDDWwWwWwWwW..',
+  '..WWWWWWWWDDDDWWWWWWWW..',
+  '..WWWWWWWWDDDDWWWWWWWW..',
+];
+export const COOP_PAL: Palette = {
+  R: '#f83800', W: '#f8b800', w: '#a05a18', D: '#302010',
+};
+
+/** Koszyczek ze złotymi jajkami — stoi przy kurniku na mecie. */
+export const BASKET = [
+  '..GG...GG...GG..',
+  '.GGGG.GGGG.GGGG.',
+  'KKKKKKKKKKKKKKKK',
+  'KkKkKkKkKkKkKkKk',
+  'KkKkKkKkKkKkKkKk',
+  '.KKKKKKKKKKKKKK.',
+  '..KKKKKKKKKKKK..',
+];
+export const BASKET_PAL: Palette = { G: '#f8d800', K: '#c84c0c', k: '#7c2800' };

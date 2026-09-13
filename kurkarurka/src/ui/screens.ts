@@ -164,18 +164,22 @@ export class ScreenManager {
     } catch { /* fonty niedostępne — fallback monospace */ }
     setFill(45);
 
-    // Krok 2: muzyka — bufor mp3 gotowy do grania (canplaythrough), max 8 s.
-    const audio = document.getElementById('bgMusic') as HTMLAudioElement | null;
-    if (audio && audio.readyState < 3) {
-      audio.load();
-      await Promise.race([
-        new Promise<void>(r => {
-          audio.addEventListener('canplaythrough', () => r(), { once: true });
-          audio.addEventListener('error', () => r(), { once: true });
-        }),
-        delay(8000),
-      ]);
-    }
+    // Krok 2: muzyka — bufory mp3 obu trybów gotowe do grania
+    // (canplaythrough), max 8 s na wszystkie razem.
+    const tracks = ['bgMusic', 'bgMusicHard']
+      .map(id => document.getElementById(id) as HTMLAudioElement | null)
+      .filter((a): a is HTMLAudioElement => a !== null);
+    await Promise.race([
+      Promise.all(tracks.map(a => {
+        if (a.readyState >= 3) return Promise.resolve();
+        a.load();
+        return new Promise<void>(r => {
+          a.addEventListener('canplaythrough', () => r(), { once: true });
+          a.addEventListener('error', () => r(), { once: true });
+        });
+      })),
+      delay(8000),
+    ]);
     setFill(100);
 
     // Minimum 1.6 s — logo i pasek mają się "wyświetlić", nie mignąć.
