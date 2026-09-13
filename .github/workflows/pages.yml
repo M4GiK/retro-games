@@ -25,9 +25,16 @@ jobs:
           cache-dependency-path: kurkarurka/package-lock.json
       - run: npm ci && npm run build
         working-directory: kurkarurka
+      # Launcher (root index.html) linkuje relatywnie do covers/ i
+      # kurkarurka/dist/ — katalog strony musi odzwierciedlać layout repo.
+      - run: |
+          mkdir -p site/kurkarurka
+          cp index.html site/
+          cp -r covers site/covers
+          cp -r kurkarurka/dist site/kurkarurka/dist
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: kurkarurka/dist
+          path: site
 
   deploy:
     needs: build
