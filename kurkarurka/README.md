@@ -53,6 +53,10 @@ npm run typecheck  # tsc --noEmit
   4. poziom trudności; w przygodzie co 5. poziom to osobna arena (jajka,
   głazy i pająki celowane w gracza), a każda kolejna arena jest twardsza.
 - Ranking top 5 z inicjałami trzymany jest lokalnie w `localStorage`.
+- **Pełny ekran na mobile:** na Androidzie gra sama wchodzi w fullscreen
+  przy pierwszym dotknięciu; na iPhonie — `Udostępnij → Dodaj do ekranu
+  początkowego`, ikona odpala grę standalone, bez paska Safari (wymaga
+  serwowania po http/https, np. GitHub Pages).
 
 ## Struktura
 
@@ -69,7 +73,7 @@ src/
     factory.ts        — EntityFactory: tworzenie encji (jajka, lisy, bonusy, segmenty, platformy)
     level.ts          — generator poziomów przygody (segmenty, przepaści, patrole, meta)
   systems/
-    input.ts          — InputManager: klawiatura + ekranowy pad dotykowy
+    input.ts          — InputManager: klawiatura + ekranowy pad + fullscreen na dotyk
     game.ts           — Game: pętla rozgrywki (beforeUpdate), start(mode), gameOver
   render/
     sprites.ts        — atlas sprite'ów (mapy znakowe + palety) i rasteryzer
@@ -81,6 +85,7 @@ src/
     screens.ts        — ScreenManager: maszyna stanów ekranów i nawigacja
     splash.ts         — SplashScreen: animacja CRT (power-on/off) + jingle
     leaderboard.ts    — Leaderboard: repozytorium rekordów (localStorage, top 5)
+    fullscreen.ts     — detekcja standalone + instrukcja A2HS dla iOS
 assets/               — mp3 per tryb: Quarter_in_the_Slot.mp3 (przygoda),
                         The_Giant_s_Pounce.mp3 (koszmar) — data URI w buildzie
 concept/              — stare wersje gry (referencja)

@@ -127,6 +127,12 @@ export class ScreenManager {
       });
     });
 
+    // Ekranowy pad nawiguje też po ekranach (CSS trzyma go nad .screen):
+    // ◀/▶ = ruch wyboru (w pionowym menu = góra/dół), ⤒ = zatwierdzenie.
+    el('padLeft').addEventListener('pointerdown', () => this.padDir(-1));
+    el('padRight').addEventListener('pointerdown', () => this.padDir(1));
+    el('padJump').addEventListener('pointerdown', () => this.padOk());
+
     // Splash M4GIK -> boot -> tytuł
     this.show('splash');
     this.splashDone = false;
@@ -215,6 +221,13 @@ export class ScreenManager {
     this.splash?.handleInput();
   }
 
+  /** Przesuwa wybór w menu o d (-1 w górę / 1 w dół, z zapętleniem). */
+  private menuMove(d: number): void {
+    this.menuSel = (this.menuSel + d + this.menuItems.length) % this.menuItems.length;
+    this.menuItems.forEach((li, i) => li.classList.toggle('sel', i === this.menuSel));
+    this.audio.playMove();
+  }
+
   /** Aktywuje zaznaczoną pozycję menu: start gry albo ekran rankingu. */
   private activateMenuItem(): void {
     if (this.current !== 'menu') return;
@@ -299,6 +312,13 @@ export class ScreenManager {
     this.overButtons.forEach((b, i) => b.classList.toggle('sel', i === this.overSel));
   }
 
+  /** Cykli wybór na ekranie końca gry — dowolny kierunek przerzuca opcję. */
+  private overMove(): void {
+    this.overSel = (this.overSel + 1) % this.overButtons.length;
+    this.overRenderSel();
+    this.audio.playMove();
+  }
+
   /** Aktywuje zaznaczoną opcję końca gry: kolejna runda albo powrót do menu. */
   private activateOverItem(): void {
     if (this.current !== 'over') return;
@@ -308,8 +328,43 @@ export class ScreenManager {
   }
 
   /**
+   * Ekranowe ◀/▶ — odpowiednik ←/→ klawiatury: w pionowym menu to góra/dół
+   * wyboru, w hs przesuwa kursor inicjałów. Na splashu/bootu działa jak
+   * dowolny klawisz (skip).
+   */
+  private padDir(d: number): void {
+    switch (this.current) {
+      case 'splash': this.skipSplash(); break;
+      case 'boot': this.goTitle(); break;
+      case 'menu': this.menuMove(d); break;
+      case 'over': this.overMove(); break;
+      case 'hs':
+        this.hsPos = Math.max(0, Math.min(2, this.hsPos + d));
+        this.hsRender();
+        break;
+      default:
+        break;
+    }
+  }
+
+  /** Ekranowe ⤒ — odpowiednik Enter: zatwierdza bieżący ekran/wybór. */
+  private padOk(): void {
+    switch (this.current) {
+      case 'splash': this.skipSplash(); break;
+      case 'boot': this.goTitle(); break;
+      case 'title': this.show('menu'); break;
+      case 'menu': this.activateMenuItem(); break;
+      case 'rank': this.show('menu'); break;
+      case 'hs': this.hsConfirm(); break;
+      case 'over': this.activateOverItem(); break;
+      default:
+        break;
+    }
+  }
+
+  /**
    * Nawigacja klawiaturowa — dispatch wejścia per stan maszyny.
-   * (↑↓ Enter Esc + WASD jako alternatywa)
+   * (↑↓←→ Enter Esc + WASD jako alternatywa)
    */
   private readonly onKey = (e: KeyboardEvent): void => {
     const k = e.key;
@@ -324,14 +379,10 @@ export class ScreenManager {
         if (k === 'Enter' || k === ' ') this.show('menu');
         break;
       case 'menu':
-        if (k === 'ArrowUp' || k === 'w' || k === 'W') {
-          this.menuSel = (this.menuSel - 1 + this.menuItems.length) % this.menuItems.length;
-          this.menuItems.forEach((li, i) => li.classList.toggle('sel', i === this.menuSel));
-          this.audio.playMove();
-        } else if (k === 'ArrowDown' || k === 's' || k === 'S') {
-          this.menuSel = (this.menuSel + 1) % this.menuItems.length;
-          this.menuItems.forEach((li, i) => li.classList.toggle('sel', i === this.menuSel));
-          this.audio.playMove();
+        if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'ArrowLeft' || k === 'a' || k === 'A') {
+          this.menuMove(-1);
+        } else if (k === 'ArrowDown' || k === 's' || k === 'S' || k === 'ArrowRight' || k === 'd' || k === 'D') {
+          this.menuMove(1);
         } else if (k === 'Enter' || k === ' ') {
           this.activateMenuItem();
         }
@@ -349,9 +400,7 @@ export class ScreenManager {
       case 'over':
         if (k === 'ArrowLeft' || k === 'a' || k === 'A' || k === 'ArrowRight' || k === 'd' || k === 'D'
           || k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'ArrowDown' || k === 's' || k === 'S') {
-          this.overSel = (this.overSel + 1) % this.overButtons.length;
-          this.overRenderSel();
-          this.audio.playMove();
+          this.overMove();
         } else if (k === 'Enter' || k === ' ') {
           this.activateOverItem();
         } else if (k === 'Escape') {

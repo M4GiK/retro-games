@@ -23,6 +23,8 @@ export class InputManager {
   private readonly pad = { left: false, right: false, jump: false };
   /** Stuknięcie ekranu = krótki impuls "trzymanego" skoku (~160 ms = średni wyskok). */
   private tapJumpUntil = 0;
+  /** Czy już weszliśmy w pełny ekran — po wyjściu usera nie wymuszamy go z powrotem. */
+  private fullscreenDone = false;
 
   /**
    * @param stage   element sceny — na nim łapiemy dotknięcia "poza padem".
@@ -100,8 +102,24 @@ export class InputManager {
       document.body.classList.add('touch');
     }
     window.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'touch') document.body.classList.add('touch');
+      if (e.pointerType !== 'touch') return;
+      document.body.classList.add('touch');
+      this.tryFullscreen();
     }, { passive: true });
+  }
+
+  /**
+   * Pierwszy dotyk = wejście w pełny ekran — na Androidzie chowa to pasek
+   * URL i nawigację systemu. iOS nie wspiera Fullscreen API (fullscreenEnabled
+   * = false), tam działa wyłącznie „Dodaj do ekranu początkowego" (hint
+   * w menu — ui/fullscreen.ts). Gest może odrzucić żądanie — wtedy kolejny
+   * dotyk spróbuje ponownie; po sukcesie już nigdy nie wymuszamy.
+   */
+  private tryFullscreen(): void {
+    if (this.fullscreenDone || !document.fullscreenEnabled || document.fullscreenElement) return;
+    void document.documentElement.requestFullscreen()
+      .then(() => { this.fullscreenDone = true; })
+      .catch(() => { /* odrzucone — następny dotyk spróbuje ponownie */ });
   }
 
   /** Ekranowy gamepad: ◀ ▶ przytrzymywane, ⤒ skok (przytrzymanie = wyższy skok). */

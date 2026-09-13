@@ -19,6 +19,7 @@ import { Game } from './systems/game';
 import { SceneRenderer } from './render/scene';
 import { AudioSystem } from './audio/audio';
 import { ScreenManager } from './ui/screens';
+import { initInstallHint } from './ui/fullscreen';
 
 // ---- Kompozycja systemów ----
 
@@ -55,6 +56,7 @@ input.init();
 game.init();
 renderer.init();
 screens.init();
+initInstallHint();
 
 // Przycisk wyciszenia muzyki — globalny element chrome'u gry (SFX grają dalej).
 const muteBtn = document.getElementById('mute') as HTMLButtonElement;
