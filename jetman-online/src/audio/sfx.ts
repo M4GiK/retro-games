@@ -80,6 +80,9 @@ export function setMuted(m: boolean): void {
 
 // ---- Planowanie na zegarze AudioContext (jingle splasha) ----
 
+/** Źródła zaplanowane z góry — trzymane po to, by skip intro mógł je uciąć. */
+const scheduled = new Set<AudioScheduledSourceNode>();
+
 /** Ton zaplanowany na `when` (c.currentTime + offset) — sekwencje z góry. */
 export function toneAt(freq: number, type: OscillatorType, dur: number, when: number, vol = 0.07, slide?: number): void {
   if (muted || !ac) return;
@@ -94,6 +97,8 @@ export function toneAt(freq: number, type: OscillatorType, dur: number, when: nu
     o.connect(g).connect(ac.destination);
     o.start(when);
     o.stop(when + dur);
+    scheduled.add(o);
+    o.onended = () => scheduled.delete(o);
   } catch { /* audio zablokowane */ }
 }
 
@@ -117,7 +122,18 @@ export function noiseAt(dur: number, when: number, vol = 0.08, highFreq = 4000):
     src.connect(f).connect(g).connect(c.destination);
     src.start(when);
     src.stop(when + dur);
+    scheduled.add(src);
+    src.onended = () => scheduled.delete(src);
   } catch { /* audio zablokowane */ }
+}
+
+/**
+ * Ucina wszystkie dźwięki zaplanowane przez toneAt/noiseAt — bez tego
+ * skip intro puszczał resztę jingle'a na lecącą już muzykę menu.
+ */
+export function cancelScheduled(): void {
+  for (const s of scheduled) { try { s.stop(); } catch { /* już odgrane */ } }
+  scheduled.clear();
 }
 
 /**

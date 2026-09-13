@@ -22,6 +22,8 @@ export interface SplashAudio {
   tone(freq: number, type: OscillatorType, dur: number, when: number, vol?: number, slideTo?: number): void;
   /** Szum highpass zaplanowany na zegarze AudioContext. */
   noise(dur: number, when: number, vol?: number, filterFreq?: number): void;
+  /** Ucina zaplanowane dźwięki jingle'a — wołane przy zamykaniu splasha. */
+  stopAudio(): void;
 }
 
 const W = 256;
@@ -224,10 +226,11 @@ export class SplashScreen {
     else this.finish();
   }
 
-  /** Zamyka splash: czarny ekran, stop rAF, callback wyjścia. */
+  /** Zamyka splash: czarny ekran, stop rAF, ucięcie jingle'a, callback wyjścia. */
   private finish(): void {
     if (this.finished) return;
     this.finished = true;
+    this.audio.stopAudio();
     cancelAnimationFrame(this.raf);
     if (this.ctx) {
       this.ctx.fillStyle = '#000';

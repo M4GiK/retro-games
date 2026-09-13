@@ -24,7 +24,7 @@ import type { Transport } from './net/transport';
 import { InputManager } from './systems/input';
 import { drawHud } from './render/hud';
 import { Effects } from './render/effects';
-import { playEvents, setThrust, audioUnlocked, runAudio, toneAt, noiseAt } from './audio/sfx';
+import { playEvents, setThrust, audioUnlocked, runAudio, toneAt, noiseAt, cancelScheduled } from './audio/sfx';
 import { playMusic } from './audio/music';
 import { Menu } from './ui/menu';
 import { SplashScreen } from './ui/splash';
@@ -199,7 +199,7 @@ requestAnimationFrame(frame);
 const splashEl = document.getElementById('splash')!;
 const splash = new SplashScreen(
   document.getElementById('splashFx') as HTMLCanvasElement,
-  { audioUnlocked, runAudio, tone: toneAt, noise: noiseAt },
+  { audioUnlocked, runAudio, tone: toneAt, noise: noiseAt, stopAudio: cancelScheduled },
   () => {
     splashEl.hidden = true;
     menu.show('menu');
