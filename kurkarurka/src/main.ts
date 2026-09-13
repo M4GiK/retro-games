@@ -37,6 +37,7 @@ const factory = new EntityFactory();
 const input = new InputManager(stage, () => gameState.running, {
   onJump: () => game.tryJump(),
   onExtraLife: () => game.cheatLife(),
+  onPause: () => game.togglePause(),
 });
 const game = new Game(input, audio, factory, {
   onGameOver: (score, eggs) => screens.handleGameOver(score, eggs),

@@ -21,6 +21,12 @@ export class AudioSystem {
   private musicHardEl: HTMLAudioElement | null;
   /** Bufor białego szumu — "kanał szumu" NES (uderzenia, trzaski, perkusja). */
   private noiseBuf: AudioBuffer | null = null;
+  /** Szyna muzyki: lowpass -> gain -> wyjście. Przy 20 kHz filtr jest
+   *  przezroczysty; pauza ścina go do ~650 Hz (efekt "za ścianą"). */
+  private musicFilter: BiquadFilterNode | null = null;
+  private musicGain: GainNode | null = null;
+  /** Elementy mp3 już podpięte do szyny (źródło tworzy się raz na element). */
+  private readonly routedEls = new Set<HTMLAudioElement>();
 
   // ---- Stan sekwencera chiptune (fallback) ----
   private musicPlaying = false;
@@ -87,8 +93,9 @@ export class AudioSystem {
   /**
    * Impuls szumu przez filtr highpass — uderzenia, trzaski, perkusja.
    * Obwiednia exp-down do ~0 na końcu (klasyczny dźwięk chiptune).
+   * `out` pozwala skierować dźwięk do szyny muzycznej (domyślnie wyjście).
    */
-  noise(duration: number, when: number, vol = 0.1, filterFreq = 4000): void {
+  noise(duration: number, when: number, vol = 0.1, filterFreq = 4000, out?: AudioNode): void {
     const c = this.getCtx();
     const src = c.createBufferSource();
     src.buffer = this.getNoiseBuf(c);
@@ -98,7 +105,7 @@ export class AudioSystem {
     const g = c.createGain();
     g.gain.setValueAtTime(vol, when);
     g.gain.exponentialRampToValueAtTime(0.001, when + duration);
-    src.connect(f).connect(g).connect(c.destination);
+    src.connect(f).connect(g).connect(out ?? c.destination);
     src.start(when);
     src.stop(when + duration);
   }
@@ -106,8 +113,9 @@ export class AudioSystem {
   /**
    * Pojedynczy ton oscylatora z obwiednią exp-down. slideTo != null daje
    * portamento (narastanie/opadanie wysokości) — np. skok, przegrana.
+   * `out` pozwala skierować dźwięk do szyny muzycznej (domyślnie wyjście).
    */
-  tone(freq: number, type: OscillatorType, duration: number, when: number, vol = 0.08, slideTo: number | null = null): void {
+  tone(freq: number, type: OscillatorType, duration: number, when: number, vol = 0.08, slideTo: number | null = null, out?: AudioNode): void {
     const c = this.getCtx();
     const osc = c.createOscillator();
     const gain = c.createGain();
@@ -116,9 +124,39 @@ export class AudioSystem {
     if (slideTo != null) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), when + duration);
     gain.gain.setValueAtTime(vol, when);
     gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
-    osc.connect(gain).connect(c.destination);
+    osc.connect(gain).connect(out ?? c.destination);
     osc.start(when);
     osc.stop(when + duration);
+  }
+
+  /** Wspólna szyna muzyki (mp3 + chiptune): wejście = filtr lowpass. */
+  private musicBus(): AudioNode {
+    const c = this.getCtx();
+    if (!this.musicFilter) {
+      this.musicFilter = c.createBiquadFilter();
+      this.musicFilter.type = 'lowpass';
+      this.musicFilter.frequency.value = 20000;
+      this.musicGain = c.createGain();
+      this.musicFilter.connect(this.musicGain).connect(c.destination);
+    }
+    return this.musicFilter;
+  }
+
+  /** Podpina element mp3 do szyny — raz na element; bez tego gra wprost. */
+  private routeMusic(el: HTMLAudioElement): void {
+    if (this.routedEls.has(el)) return;
+    try {
+      this.getCtx().createMediaElementSource(el).connect(this.musicBus());
+      this.routedEls.add(el);
+    } catch { /* element zostaje bez szyny — muzyka gra normalnie */ }
+  }
+
+  /** Tłumienie muzyki na czas pauzy — lowpass ~650 Hz + przyciszenie. */
+  setMusicMuffled(m: boolean): void {
+    if (!this.ctx || !this.musicFilter || !this.musicGain) return;
+    const t = this.ctx.currentTime;
+    this.musicFilter.frequency.setTargetAtTime(m ? 650 : 20000, t, 0.05);
+    this.musicGain.gain.setTargetAtTime(m ? 0.5 : 1, t, 0.05);
   }
 
   // ---- Efekty grywalnościowe (SFX) ----
@@ -241,12 +279,13 @@ export class AudioSystem {
       if (!this.musicPlaying) return;
       const t = this.now + 0.06;
       const s = this.musicStep % 8;
+      const out = this.musicBus();
       // NES: bas na triangle, melodia na square, perkusja na szumie
-      if (bass[s]) this.tone(bass[s], 'triangle', 0.24, t, 0.09);
-      if (lead[s]) this.tone(lead[s], 'square', 0.14, t + 0.02, 0.045);
-      if (kick[s]) this.tone(60, 'sine', 0.08, t, 0.14, 120);
-      if (snare[s]) this.noise(0.06, t + 0.04, 0.09, 1800);
-      if (hat[s]) this.noise(0.02, t + 0.04, 0.03, 8000);
+      if (bass[s]) this.tone(bass[s], 'triangle', 0.24, t, 0.09, null, out);
+      if (lead[s]) this.tone(lead[s], 'square', 0.14, t + 0.02, 0.045, null, out);
+      if (kick[s]) this.tone(60, 'sine', 0.08, t, 0.14, 120, out);
+      if (snare[s]) this.noise(0.06, t + 0.04, 0.09, 1800, out);
+      if (hat[s]) this.noise(0.02, t + 0.04, 0.03, 8000, out);
       this.musicStep++;
     }, 150);
   }
@@ -263,6 +302,7 @@ export class AudioSystem {
     this.stopMusic();
     this.musicEl?.pause();
     this.musicHardEl?.pause();
+    this.setMusicMuffled(false);
   }
 
   /**
@@ -297,6 +337,7 @@ export class AudioSystem {
     second?.pause();
     for (const el of [first, second]) {
       if (!el) continue;
+      this.routeMusic(el);
       try {
         await el.play();
         this.stopMusic();

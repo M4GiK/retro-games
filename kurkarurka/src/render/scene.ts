@@ -223,6 +223,22 @@ export class SceneRenderer {
     // Pasek statusu NES — tylko w trakcie gry
     if (gameState.running) this.drawHUD(ctx, w);
 
+    // Pauza — przyciemniona scena + mrugający napis (fizyka zamrożona,
+    // więc świat pod spodem stoi w miejscu)
+    if (gameState.paused) {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.font = '8px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fcfcfc';
+      ctx.fillText('PAUZA', w / 2, h / 2 - 8);
+      if (Math.floor(ts / 500) % 2 === 0) {
+        ctx.fillStyle = '#00e5ff';
+        ctx.fillText('P — DALEJ', w / 2, h / 2 + 12);
+      }
+      ctx.textAlign = 'left';
+    }
+
     if (activeEffects.slowTime > 0) {
       ctx.fillStyle = 'rgba(168, 56, 248, 0.15)';
       ctx.fillRect(0, 0, w, h);

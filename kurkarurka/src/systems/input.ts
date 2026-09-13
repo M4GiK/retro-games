@@ -13,6 +13,7 @@
 export interface InputHandlers {
   onJump: () => void;
   onExtraLife: () => void;
+  onPause: () => void;
 }
 
 export class InputManager {
@@ -83,6 +84,7 @@ export class InputManager {
       this.keys.add(k);
       if (k === 'w' || k === 'arrowup' || k === ' ') this.handlers.onJump();
       if (k === 'h') this.handlers.onExtraLife();
+      if (k === 'p') this.handlers.onPause();
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.key.toLowerCase()));
     // Utrata fokusu okna (alt-tab) — inaczej wciśnięty klawisz "zawiesza" ruch.

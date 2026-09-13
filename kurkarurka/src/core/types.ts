@@ -120,6 +120,7 @@ export interface ActiveEffects {
 /** Globalne liczniki rundy — źródło prawdy dla HUD i logiki. */
 export interface GameState {
   running: boolean;      // trwa runda (false na ekranach menu)
+  paused: boolean;       // pauza — fizyka zamrożona (timeScale 0), muzyka stłumiona
   mode: GameMode;        // 'normal' przygoda / 'hard' koszmar
   score: number;
   lives: number;

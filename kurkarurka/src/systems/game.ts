@@ -95,6 +95,8 @@ export class Game {
     this.currentMode = mode;
     gameState.mode = mode;
     gameState.running = true;
+    gameState.paused = false;
+    physics.engine.timing.timeScale = 1;
     gameState.score = 0;
     gameState.lives = START_LIVES;
     gameState.collected = 0;
@@ -141,6 +143,8 @@ export class Game {
    */
   gameOver(): void {
     gameState.running = false;
+    gameState.paused = false;
+    physics.engine.timing.timeScale = 1;
     levelState.bossArena = false;
     this.input.clear();
     this.audio.stopAllMusic();
@@ -163,8 +167,20 @@ export class Game {
    * albo jest w oknie coyote / ma wolny skok w powietrzu.
    */
   tryJump(): void {
-    if (!gameState.running) return;
+    if (!gameState.running || gameState.paused) return;
     this.jumpBufferUntil = physics.now + JUMP_BUFFER_MS;
+  }
+
+  /**
+   * Pauza (klawisz P): zamraża fizykę przez timeScale 0 — zegar silnika
+   * i wszystkie timery gry stoją, a renderer rysuje zamrożoną klatkę
+   * z nakładką PAUZA. Muzyka gra dalej, ale tłumiona filtrem.
+   */
+  togglePause(): void {
+    if (!gameState.running) return;
+    gameState.paused = !gameState.paused;
+    physics.engine.timing.timeScale = gameState.paused ? 0 : 1;
+    this.audio.setMusicMuffled(gameState.paused);
   }
 
   /** Hax: klawisz H w trakcie rundy dokłada życie — bez limitu power-upu. */
@@ -196,7 +212,7 @@ export class Game {
    * od razu uczestniczyły w rozgrywce.
    */
   private update(): void {
-    if (!gameState.running) return;
+    if (!gameState.running || gameState.paused) return;
     const now = physics.now;
     const arena = this.arena;
 
@@ -566,7 +582,7 @@ export class Game {
         for (let k = 0; k < groupSize; k++) {
           const side = this.foxSpawnSide();
           setTimeout(() => {
-            if (gameState.running) this.factory.spawnEnemy(null, side);
+            if (gameState.running && !gameState.paused) this.factory.spawnEnemy(null, side);
           }, k * 450);
         }
         this.lastEnemy = now;

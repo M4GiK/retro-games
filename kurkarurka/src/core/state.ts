@@ -13,6 +13,7 @@ import { START_LIVES } from './config';
 /** Liczniki rundy — resetowane przez Game.start(). */
 export const gameState: GameState = {
   running: false,
+  paused: false,
   mode: 'normal',
   score: 0,
   lives: START_LIVES,
