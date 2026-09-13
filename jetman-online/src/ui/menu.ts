@@ -2,8 +2,10 @@
  * Menu / lobby / ekran końcowy — nakładki DOM nad canvasem (ticket D).
  *
  * Ekrany zdefiniowane w src/index.html: #menu #join #lobby #over.
- * Menu główne to lista z kursorem ▶ jak w kurkarurce — nawigacja
- * ↑↓/←→ + Enter albo dotyk (jedno dotknięcie = wybór + start).
+ * Menu główne to stalowe karty trybów — nawigacja ↑↓/←→ + Enter albo
+ * dotyk (jedno dotknięcie = wybór + start). Ekran DOŁĄCZ ma klawiaturę
+ * ekranową z alfabetu ROOM_CODE_CHARS — kod da się wpisać bez
+ * fizycznej klawiatury (klawisze A-Z/2-9, Backspace i Enter też działają).
  * Lobby ma wybór broni (primary/secondary) i mapy (host); zmiana broni
  * emituje onLoadout → session.setLoadout → 'loadout' do hosta.
  * Deep-link: ?room=KOD — main.ts odpala join po splashu.
@@ -12,6 +14,7 @@
 import type { PlayerSlot } from '../core/protocol';
 import { LOBBY_WEAPONS, WEAPONS } from '../core/weapons';
 import { LEVELS } from '../core/level';
+import { ROOM_CODE_CHARS, ROOM_CODE_LEN } from '../core/config';
 import { uiMove, uiOk } from '../audio/sfx';
 import type { WeaponId } from '../core/types';
 
@@ -34,6 +37,9 @@ export class Menu {
   private cur: ScreenId = 'none';
   private menuSel = 0;
   private readonly menuItems: HTMLElement[];
+  /** Kod wpisywany na ekranie DOŁĄCZ (klawiatura ekranowa + fizyczna). */
+  private code = '';
+  private readonly slotEls: HTMLElement[] = [];
 
   constructor(private readonly h: MenuHandlers) {
     this.fillWeapons();
@@ -55,9 +61,23 @@ export class Menu {
     $('#btnBack3').addEventListener('click', () => { h.onLeave(); this.show('menu'); });
     $('#btnStart').addEventListener('click', () => h.onStart(this.mapIdx()));
     $('#btnAgain').addEventListener('click', () => h.onAgain(this.mapIdx()));
-    ($('#joinCode') as HTMLInputElement).addEventListener('keydown', e => {
-      if (e.key === 'Enter') this.submitCode();
-    });
+    $('#btnDel').addEventListener('click', () => this.keyDel());
+    // Klawiatura ekranowa: klawisze z alfabetu kodów + sloty kodu.
+    const pad = $('#pad');
+    for (const ch of ROOM_CODE_CHARS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = ch;
+      b.addEventListener('pointerdown', e => { e.preventDefault(); this.keyChar(ch); });
+      pad.appendChild(b);
+    }
+    const slots = $('#joinSlots');
+    for (let i = 0; i < ROOM_CODE_LEN; i++) {
+      const s = document.createElement('span');
+      slots.appendChild(s);
+      this.slotEls.push(s);
+    }
     for (const id of ['selW1', 'selW2']) {
       $(`#${id}`).addEventListener('change', () => {
         const [w1, w2] = this.loadout();
@@ -96,10 +116,35 @@ export class Menu {
   }
 
   private submitCode(): void {
-    const code = ($('#joinCode') as HTMLInputElement).value.trim().toUpperCase();
-    if (code.length !== 4) { this.error('join', 'KOD MA 4 ZNAKI'); return; }
+    if (this.code.length !== ROOM_CODE_LEN) { this.error('join', 'KOD MA 4 ZNAKI'); return; }
     const [w1, w2] = this.loadout();
-    this.h.onJoin(code, w1, w2);
+    this.h.onJoin(this.code, w1, w2);
+  }
+
+  /** Klawisz ekranowy: dopisuje znak do kodu (max ROOM_CODE_LEN). */
+  private keyChar(ch: string): void {
+    if (this.code.length >= ROOM_CODE_LEN) return;
+    this.code += ch;
+    this.renderCode();
+    uiMove();
+  }
+
+  /** SKASUJ / Backspace — zdejmuje ostatni znak kodu. */
+  private keyDel(): void {
+    if (!this.code) return;
+    this.code = this.code.slice(0, -1);
+    this.renderCode();
+    uiMove();
+  }
+
+  /** Sloty kodu + odblokowanie DOŁĄCZ, gdy kod kompletny. */
+  private renderCode(): void {
+    this.slotEls.forEach((s, i) => {
+      s.textContent = this.code[i] ?? '';
+      s.classList.toggle('on', i < this.code.length);
+      s.classList.toggle('next', i === this.code.length);
+    });
+    ($('#btnGo') as HTMLButtonElement).disabled = this.code.length !== ROOM_CODE_LEN;
   }
 
   /** Programowe dołączenie (deep-link ?room=KOD). */
@@ -114,7 +159,7 @@ export class Menu {
     for (const id of ['menu', 'join', 'lobby', 'over']) {
       $(`#${id}`).hidden = id !== which;
     }
-    if (which === 'join') ($('#joinCode') as HTMLInputElement).focus();
+    if (which === 'join') { this.code = ''; this.renderCode(); this.error('join', ''); }
   }
 
   /** Podświetla wybraną pozycję listy menu. */
@@ -143,10 +188,14 @@ export class Menu {
     }
   }
 
-  /** Klawiatura: na 'menu' kursor + Enter; na 'join' Escape = wstecz. */
+  /** Klawiatura: 'menu' kursor + Enter; 'join' znaki/Backspace/Enter/Escape. */
   private onKey(e: KeyboardEvent): void {
     if (this.cur === 'join') {
-      if (e.key === 'Escape') this.show('menu');
+      if (e.key === 'Escape') { this.show('menu'); return; }
+      if (e.key === 'Backspace') { this.keyDel(); return; }
+      if (e.key === 'Enter') { this.submitCode(); return; }
+      const ch = e.key.toUpperCase();
+      if (ch.length === 1 && ROOM_CODE_CHARS.includes(ch)) this.keyChar(ch);
       return;
     }
     if (this.cur !== 'menu') return;

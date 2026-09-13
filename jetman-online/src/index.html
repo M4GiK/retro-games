@@ -15,8 +15,8 @@ html,body{height:100%;margin:0;overscroll-behavior:none;background:#000;
 body{display:flex;align-items:center;justify-content:center}
 /* Scena: stały świat 256x240 skalowany w górę przez CSS */
 #stage{position:relative;width:min(96vw,calc(96vh*256/240));aspect-ratio:256/240}
-#game{position:absolute;inset:0;width:100%;height:100%;background:#0a0a18;
-  border:3px solid #2a2a44;box-shadow:0 0 40px rgba(0,229,255,.15)}
+#game{position:absolute;inset:0;width:100%;height:100%;background:#05081e;
+  border:3px solid #1c3568;box-shadow:0 0 40px rgba(40,120,255,.22)}
 /* Scanliny CRT + winieta nad obrazem */
 #stage::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:5;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);
@@ -26,51 +26,100 @@ body{display:flex;align-items:center;justify-content:center}
 #splash{background:#000;padding:0;cursor:pointer;z-index:20}
 #splashFx{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 
-/* Nakładki menu — DOM, nie canvas (ticket D); duch jak w kurkarurce:
-   półprzezroczyste tło + checkerboard-dithering */
+/* Nakładki menu — DOM, nie canvas (ticket D). Scena jak na okładce
+   covers/jetman.jpg: głęboki kosmos, księżyc z kraterami, gwiazdy
+   (kafelki gradientów o różnych rozmiarach) i łuna eksplozji przy
+   dolnym horyzoncie. Checkerboard-dithering zostaje na ::before. */
 .overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:12px;background:rgba(22,15,38,.9);
-  text-transform:uppercase;text-align:center;padding:12px}
+  align-items:center;justify-content:center;gap:11px;
+  text-transform:uppercase;text-align:center;padding:12px;
+  background:
+    radial-gradient(6px 6px at 76.5% 12%,rgba(86,104,154,.85) 60%,transparent 63%),
+    radial-gradient(4px 4px at 82.5% 19%,rgba(86,104,154,.8) 60%,transparent 63%),
+    radial-gradient(4.5px 4.5px at 80% 7%,rgba(64,84,134,.75) 60%,transparent 63%),
+    radial-gradient(26px 26px at 80% 13%,#e2ebfa 55%,#aebfe4 78%,transparent 81%),
+    radial-gradient(1.6px 1.6px at 22% 34%,#fff 55%,transparent 62%),
+    radial-gradient(1.4px 1.4px at 68% 72%,#bfe0ff 55%,transparent 62%),
+    radial-gradient(1.8px 1.8px at 46% 12%,#fff 55%,transparent 62%),
+    radial-gradient(1.3px 1.3px at 84% 52%,#ffe9c8 55%,transparent 62%),
+    radial-gradient(1.5px 1.5px at 10% 80%,#bfe0ff 55%,transparent 62%),
+    radial-gradient(85% 42% at 50% 108%,rgba(248,110,10,.34),rgba(180,40,0,.12) 55%,transparent 75%),
+    linear-gradient(180deg,#03051a 0%,#070d2e 55%,#111c4e 100%);
+  background-size:auto,auto,auto,auto,124px 124px,168px 150px,96px 96px,
+    200px 180px,148px 132px,auto,auto}
 .overlay::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:repeating-conic-gradient(rgba(0,0,0,.16) 0% 25%,transparent 0% 50%);
   background-size:4px 4px}
 .overlay[hidden]{display:none}
-h1{font-size:clamp(14px,4vw,22px);letter-spacing:3px;margin:0;color:#ffcc00;
-  text-shadow:3px 3px 0 #f83800;line-height:1.4}
-h1 span{color:#fcfcfc}
-.sub{font-size:8px;color:#7fa0c8;letter-spacing:2px;margin:0;line-height:1.8}
-.btn{border:3px solid #000;background:#ffcc00;color:#000;font-family:inherit;
-  font-size:9px;letter-spacing:2px;padding:12px 18px;cursor:pointer;
-  box-shadow:4px 4px 0 #fff;text-transform:uppercase;min-width:190px}
-.btn:active{transform:translate(4px,4px);box-shadow:none}
-.btn.ghost{background:#2a2a44;color:#c8d4ea;box-shadow:4px 4px 0 #000}
-.btn[disabled]{background:#2a2a44;color:#7fa0c8;box-shadow:4px 4px 0 #000;cursor:default;transform:none}
-/* Menu główne — lista z kursorem ▶ jak na NES */
-#menuList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-#menuList li{font-size:clamp(9px,2.6vw,12px);color:#fcfcfc;padding:8px 20px;cursor:pointer;
-  letter-spacing:2px;border:3px solid transparent}
-#menuList li.sel{color:#ffcc00;text-shadow:2px 2px 0 #f83800;border-color:#00e5ff;
-  background:rgba(26,28,44,.8);box-shadow:4px 4px 0 #000}
-#menuList li.sel::before{content:'▶ '}
-#joinCode{font-family:inherit;font-size:14px;letter-spacing:8px;text-align:center;
-  text-transform:uppercase;background:#0a0a18;color:#ffcc00;border:3px solid #2a2a44;
-  padding:10px;width:170px;outline:none}
-#joinCode:focus{border-color:#00e5ff}
-.codebox{font-size:16px;letter-spacing:8px;color:#ffcc00;border:3px dashed #2a2a44;
-  padding:8px 14px;text-shadow:2px 2px 0 #f83800}
+h1{font-size:clamp(12px,3.4vw,17px);letter-spacing:2px;margin:0;color:#bcd9ff;
+  text-shadow:2px 2px 0 #12275c,3px 3px 0 #000;line-height:1.4}
+/* Logo jak na okładce: metaliczna stal z niebieskim połyskiem */
+h1.logo{font-size:clamp(19px,6.5vw,32px);letter-spacing:1px;line-height:1;
+  background:linear-gradient(180deg,#f4fbff 0%,#b7d6f5 30%,#6ea3e0 47%,
+    #2557ab 53%,#123172 72%,#4d84d4 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(2px 2px 0 #04102e) drop-shadow(0 4px 0 rgba(2,6,20,.9))
+    drop-shadow(0 0 14px rgba(40,140,255,.4))}
+h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
+  text-transform:lowercase;-webkit-text-fill-color:#f4f8ff;
+  filter:drop-shadow(1px 1px 0 #f8720a) drop-shadow(2px 2px 0 #1a0800)}
+.sub{font-size:7px;color:#8fb0d8;letter-spacing:2px;margin:0;line-height:1.8}
+.btn{border:2px solid #3a1500;background:linear-gradient(180deg,#ffbe4a,#f87d0a);
+  color:#241000;font-family:inherit;font-size:9px;letter-spacing:2px;
+  padding:12px 18px;cursor:pointer;min-width:190px;text-transform:uppercase;
+  box-shadow:0 3px 0 #3a1500,inset 0 1px 0 #ffe6b0}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffe6b0}
+.btn.ghost{background:linear-gradient(180deg,#2c4a86,#16264e);color:#cfe0f8;
+  border-color:#050a1c;box-shadow:0 3px 0 #050a1c,inset 0 1px 0 #5d84c8}
+.btn.ghost:active{box-shadow:inset 0 1px 0 #5d84c8}
+.btn[disabled]{background:linear-gradient(180deg,#1c2a4e,#101a34);color:#5f7ca8;
+  border-color:#050a1c;box-shadow:0 3px 0 #050a1c;cursor:default;transform:none}
+/* Menu główne — stalowe karty trybów jak na okładce; tap = wybór + start */
+#menuList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;
+  gap:9px;width:min(230px,88%)}
+#menuList li{font-size:clamp(9px,2.6vw,12px);color:#cfe0f8;padding:10px 14px;
+  cursor:pointer;letter-spacing:2px;border:2px solid #050a1c;
+  background:linear-gradient(180deg,#2c4a86,#16264e);
+  box-shadow:0 3px 0 #050a1c,inset 0 1px 0 #5d84c8}
+#menuList li small{display:block;font-size:6px;letter-spacing:1px;
+  color:#8fb0d8;margin-top:6px}
+#menuList li.sel{color:#fff;border-color:#00e5ff;
+  background:linear-gradient(180deg,#3a5fae,#1c3170);
+  box-shadow:0 3px 0 #050a1c,0 0 12px rgba(0,229,255,.45),inset 0 1px 0 #7fb0ee;
+  text-shadow:2px 2px 0 #f83800}
+#menuList li.sel small{color:#ffd9a0;text-shadow:1px 1px 0 #3a1500}
+#menuList li.sel::before{content:'▶ ';color:#ffbe4a}
+/* Ekran DOŁĄCZ — sloty kodu + klawiatura ekranowa (bez fizycznej) */
+.slots{display:flex;gap:8px}
+.slots span{width:30px;height:36px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;color:#ffbe4a;background:#050a20;
+  border:2px solid #24427e;text-shadow:2px 2px 0 #3a1500}
+.slots span.on{border-color:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.35)}
+.slots span.next{border-style:dashed;border-color:#5d84c8;
+  animation:blink 1s steps(2) infinite}
+.pad{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;width:min(248px,92%)}
+.key{font-family:inherit;font-size:clamp(8px,2vw,10px);padding:9px 0;
+  cursor:pointer;color:#cfe0f8;background:linear-gradient(180deg,#2c4a86,#16264e);
+  border:2px solid #050a1c;box-shadow:0 2px 0 #050a1c,inset 0 1px 0 #5d84c8}
+.key:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #5d84c8}
+.row{display:flex;gap:8px;width:min(280px,94%)}
+.row .btn{min-width:0;padding:12px 8px;flex:1}
+.codebox{font-size:16px;letter-spacing:8px;color:#ffbe4a;border:3px dashed #3a5fae;
+  padding:8px 14px;text-shadow:2px 2px 0 #3a1500}
 .plist{list-style:none;margin:0;padding:0;font-size:8px;letter-spacing:2px;
   display:flex;flex-direction:column;gap:6px;min-width:220px}
-.plist li{border:2px solid #2a2a44;padding:7px;color:#c8d4ea;display:flex;
-  justify-content:space-between;gap:10px}
+.plist li{border:2px solid #24427e;padding:7px;color:#c8d4ea;display:flex;
+  justify-content:space-between;gap:10px;background:rgba(6,11,36,.6)}
 .plist li.me{border-color:#00e5ff;color:#fcfcfc}
 .plist .dot{color:#00e5ff}
-.plist .wpn{color:#7fa0c8;font-size:7px}
-.selrow{display:flex;gap:8px;align-items:center;font-size:7px;letter-spacing:1px;color:#7fa0c8}
-.selrow select{font-family:inherit;font-size:8px;letter-spacing:1px;background:#0a0a18;
-  color:#ffcc00;border:2px solid #2a2a44;padding:5px;text-transform:uppercase}
+.plist .wpn{color:#8fb0d8;font-size:7px}
+.selrow{display:flex;gap:8px;align-items:center;font-size:7px;letter-spacing:1px;color:#8fb0d8}
+.selrow select{font-family:inherit;font-size:8px;letter-spacing:1px;background:#060b24;
+  color:#ffbe4a;border:2px solid #24427e;padding:5px;text-transform:uppercase}
 .selrow select:focus{border-color:#00e5ff;outline:none}
-.hint{font-size:7px;color:#7fa0c8;letter-spacing:1px;line-height:1.9;margin:0}
-.err{font-size:7px;color:#f83800;letter-spacing:1px;min-height:10px;margin:0}
+.hint{font-size:7px;color:#8fb0d8;letter-spacing:1px;line-height:1.9;margin:0}
+.err{font-size:7px;color:#ff5a2a;letter-spacing:1px;min-height:10px;margin:0}
 .blink{animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
 </style>
@@ -84,29 +133,34 @@ h1 span{color:#fcfcfc}
     <canvas id="splashFx" width="256" height="240"></canvas>
   </div>
 
-  <!-- Ekran główny: wybór trybu listą jak w kurkarurce -->
+  <!-- Ekran główny: wybór trybu — stalowe karty, wszystko na dotyk -->
   <div class="overlay" id="menu" hidden>
-    <h1>JETMAN<span>ONLINE</span></h1>
+    <h1 class="logo">JETMAN<span>online</span></h1>
     <p class="sub">POJEDYNEK NA JETPACKACH · 2–4 GRACZY</p>
     <ul id="menuList">
-      <li class="sel">STWÓRZ POKÓJ</li>
-      <li>DOŁĄCZ KODEM</li>
-      <li>DEMO (SOLO)</li>
+      <li class="sel">STWÓRZ POKÓJ<small>HOSTUJ GRĘ · PODAJ KOD ZNAJOMYM</small></li>
+      <li>DOŁĄCZ KODEM<small>WPISZ 4-ZNAKOWY KOD POKOJU</small></li>
+      <li>SOLO Z BOTEM<small>TRENING OFFLINE · DEMO</small></li>
     </ul>
     <p class="hint">◀▶ OBRÓT · ▲ CIĄG · ▼/CTRL OGIEŃ · X BROŃ 2<br>
       FLAGA W BAZIE = 5 PKT · FRAG = 1 PKT<br>
       ZNISZCZONY STATEK = PILOT NA JETPACKU</p>
-    <p class="hint">↑↓ WYBÓR · ENTER START</p>
+    <p class="hint">DOTKNIJ ABY WYBRAĆ (LUB ↑↓ + ENTER)</p>
     <p class="hint">© 2026 M4GiK Software</p>
     <p class="err" id="menuErr"></p>
   </div>
 
-  <!-- Wpisz kod pokoju -->
+  <!-- Wpisz kod pokoju — klawiatura ekranowa budowana z ROOM_CODE_CHARS -->
   <div class="overlay" id="join" hidden>
     <h1>DOŁĄCZ</h1>
-    <input id="joinCode" maxlength="4" placeholder="KOD" autocomplete="off" spellcheck="false">
-    <button class="btn" id="btnGo">DOŁĄCZ</button>
-    <button class="btn ghost" id="btnBack1">◀ WSTECZ</button>
+    <p class="sub">WPISZ 4-ZNAKOWY KOD POKOJU</p>
+    <div class="slots" id="joinSlots"></div>
+    <div class="pad" id="pad"></div>
+    <div class="row">
+      <button class="btn ghost" id="btnBack1">◀ WSTECZ</button>
+      <button class="btn ghost" id="btnDel">⌫ SKASUJ</button>
+      <button class="btn" id="btnGo" disabled>DOŁĄCZ</button>
+    </div>
     <p class="err" id="joinErr"></p>
   </div>
 
