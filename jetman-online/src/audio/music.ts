@@ -16,6 +16,7 @@ const IDS: Record<Track, string> = { menu: 'bgmMenu', game: 'bgmGame' };
 const VOL: Record<Track, number> = { menu: 0.8, game: 0.55 };
 
 let current: Track | null = null;
+let muted = false;
 let gestureHooked = false;
 
 function trackEl(t: Track): HTMLAudioElement | null {
@@ -27,7 +28,7 @@ function hookGesture(): void {
   if (gestureHooked) return;
   gestureHooked = true;
   const retry = () => {
-    if (!current) return;
+    if (!current || muted) return;
     const a = trackEl(current);
     if (a && a.paused) void a.play().catch(() => {});
   };
@@ -44,7 +45,22 @@ export function playMusic(t: Track): void {
     if (!a) continue;
     if (k !== t) { a.pause(); continue; }
     a.volume = VOL[k];
-    if (!a.paused) continue;
+    if (!a.paused || muted) continue;
     void a.play().catch(hookGesture);
   }
+}
+
+/**
+ * Wycisza/przywraca samą muzykę — SFX syntezuje sfx.ts osobno i gra dalej.
+ * Stan przeżywa zmianę ścieżki: wyciszony w grze nie wróci w menu.
+ * Zwraca stan po zmianie (true = wyciszona).
+ */
+export function toggleMusicMute(): boolean {
+  muted = !muted;
+  const a = current ? trackEl(current) : null;
+  if (a) {
+    if (muted) a.pause();
+    else void a.play().catch(hookGesture);
+  }
+  return muted;
 }

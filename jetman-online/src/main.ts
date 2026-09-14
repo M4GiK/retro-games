@@ -25,7 +25,7 @@ import { InputManager } from './systems/input';
 import { drawHud } from './render/hud';
 import { Effects } from './render/effects';
 import { playEvents, setThrust, audioUnlocked, runAudio, toneAt, noiseAt, cancelScheduled } from './audio/sfx';
-import { playMusic } from './audio/music';
+import { playMusic, toggleMusicMute } from './audio/music';
 import { Menu } from './ui/menu';
 import { SplashScreen } from './ui/splash';
 import type { NetMsg, PlayerSlot } from './core/protocol';
@@ -38,6 +38,12 @@ const input = new InputManager();
 const effects = new Effects();
 
 input.init();
+
+// Wyciszenie muzyki w trakcie rundy (SFX zostają) — widoczny tylko przy simie.
+const btnMute = document.getElementById('btnMute')!;
+btnMute.addEventListener('click', () => {
+  btnMute.classList.toggle('off', toggleMusicMute());
+});
 
 let session: Session | null = null;
 let host: HostLoop | null = null;
@@ -183,6 +189,7 @@ function startDemo(): void {
 function frame(now: number): void {
   guest?.frame(now);
   const sim = currentState();
+  btnMute.hidden = !sim;
   if (sim) {
     drawScene(ctx, sim, session?.slot ?? 0);
     effects.trail(sim);
