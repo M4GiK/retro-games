@@ -71,6 +71,7 @@ npm run dev        # watch → dist/jetman-dev.html
 npm run build      # produkcja → dist/jetman.html + dist/index.html
 npm run typecheck  # tsc --noEmit — MUSI przechodzić po każdej zmianie
 npm run test:sim   # headless testy core/ (node, bez przeglądarki)
+npm run test:net   # headless testy netcode'u (2+ graczy, BroadcastChannel)
 ```
 
 ## Testowanie ręczne

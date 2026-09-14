@@ -14,6 +14,23 @@ const MUSIC_FILES = {
   __MUSIC_SRC_GAME__: 'assets/Thrusters_at_Maximum.mp3',   // runda
 };
 
+// Poświadczenia TURN — NIE w repo. Źródła po kolei:
+//   1) jetman-online/turn.secrets.json  (lokalne, gitignored)
+//   2) env TURN_ICE_SERVERS             (sekret GitHub w CI)
+// Brak = fallback na sam STUN w config.ts (gra tylko w tej samej sieci).
+async function loadTurnIce() {
+  try {
+    return JSON.parse(await readFile('turn.secrets.json', 'utf8'));
+  } catch { /* brak pliku — spróbuj env */ }
+  try {
+    return process.env.TURN_ICE_SERVERS
+      ? JSON.parse(process.env.TURN_ICE_SERVERS)
+      : null;
+  } catch { return null; }
+}
+const turnIce = await loadTurnIce();
+if (!turnIce) console.warn('[build] brak TURN (turn.secrets.json / TURN_ICE_SERVERS) — build tylko ze STUN, online nie zadziała przez internet');
+
 async function writeHtml(js) {
   let html = await readFile('src/index.html', 'utf8');
   for (const [marker, file] of Object.entries(MUSIC_FILES)) {
@@ -44,6 +61,8 @@ const options = {
   minify: !dev,
   sourcemap: dev ? 'inline' : false,
   logLevel: 'warning',
+  // Wstrzykuj TURN ICE servers (albo null) — patrz loadTurnIce wyżej.
+  define: { __TURN_ICE__: JSON.stringify(turnIce) },
 };
 
 if (watch) {

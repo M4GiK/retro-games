@@ -8,7 +8,8 @@
     "dev": "node build.mjs --watch",
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
-    "test:sim": "node test/run.mjs"
+    "test:sim": "node test/run.mjs",
+    "test:net": "node test/net.mjs"
   },
   "dependencies": {
     "trystero": "0.25.4"

@@ -29,6 +29,26 @@ npm run typecheck  # tsc --noEmit
 npm run test:sim   # testy symulacji headless
 ```
 
+## Gra online (TURN — przejście przez NAT)
+
+WebRTC potrzebuje **TURN**, żeby zestawić połączenie przez internet
+(CGNAT, symmetric NAT, firmowe WiFi). Sam STUN działa tylko w tej samej
+sieci / przy publicznym IP — bez TURN dołączenie kończy się timeoutem
+„Pokój nie odpowiada".
+
+**Poświadczenia NIE są w repo.** `build.mjs` wstrzykuje je do bundla
+przez esbuild `define` z dwóch źródeł:
+
+- lokalnie: `jetman-online/turn.secrets.json` (gitignored) — JSON
+  z tablicą ICE servers,
+- CI (GitHub Pages): sekret repo `TURN_ICE_SERVERS` (Settings →
+  Secrets and variables → Actions) z tą samą tablicą.
+
+Obecny credential (`jetman-online`, konto **kams** na metered.ca,
+darmowy plan 20 GB/mies.) utworzony przez REST API. Bez pliku/sekretu
+build ma sam STUN i gra działa tylko w tej samej sieci
+(`?transport=local` — dwie karty w przeglądarce).
+
 ## Struktura
 
 ```

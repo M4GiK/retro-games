@@ -9,7 +9,7 @@
  */
 
 import { joinRoom, selfId as trysteroId, type JsonValue, type Room } from 'trystero';
-import { APP_ID } from '../core/config';
+import { APP_ID, ICE_SERVERS } from '../core/config';
 import type { NetMsg } from '../core/protocol';
 import type { Transport, TransportHandlers } from './transport';
 
@@ -21,7 +21,9 @@ export function createTrysteroTransport(): Transport {
     selfId: trysteroId,
 
     join(code, h) {
-      room = joinRoom({ appId: APP_ID }, code);
+      // rtcConfig.iceServers dodaje TURN — bez tego WebRTC nie przejdzie
+      // przez CGNAT/symmetric NAT (gra online nie działa przez internet).
+      room = joinRoom({ appId: APP_ID, rtcConfig: { iceServers: ICE_SERVERS } }, code);
       const action = room.makeAction<JsonValue>('m');
       sendAct = (data, target) => action.send(data, target ? { target } : undefined);
       action.onMessage = (data, ctx) => h.onMessage(data as unknown as NetMsg, ctx.peerId);

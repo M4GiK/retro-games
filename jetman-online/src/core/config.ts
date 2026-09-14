@@ -51,6 +51,43 @@ export const APP_ID = 'm4gik-jetman-online';
 /** Timeout (ms) oczekiwania gościa na odpowiedź hosta po dołączeniu. */
 export const JOIN_TIMEOUT_MS = 8000;
 
+// ---- TURN (przejście przez NAT) ----
+
+/**
+ * Serwery ICE przekazywane do trystero (rtcConfig.iceServers).
+ *
+ * STUN działa tylko przy publicznym IP / łagodnym NAT — wystarczy do
+ * grania w tej samej sieci. Przez internet (CGNAT, symmetric NAT,
+ * firmowe WiFi) WebRTC nie zestawi się bez TURN, który relayuje ruch.
+ *
+ * Poświadczenia TURN NIE są w repo — build.mjs wstrzykuje je przez
+ * esbuild `define` z gitignored `turn.secrets.json` (lokalnie) albo
+ * env `TURN_ICE_SERVERS` (sekret GitHub w CI). Bez nich = sam STUN,
+ * czyli gra online działa tylko w tej samej sieci.
+ */
+export interface TurnServer {
+  urls: string;
+  username?: string;
+  credential?: string;
+}
+
+/** Wstrzykiwane przez esbuild define w build.mjs (brak w repo). */
+declare const __TURN_ICE__: TurnServer[] | null;
+
+/**
+ * Fallback bez TURN — STUN metered + google/cloudflare. Wystarczy do
+ * gry w jednej sieci; przez internet wymaga wstrzykniętych poświadczeń.
+ */
+const ICE_FALLBACK: TurnServer[] = [
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
+];
+
+/** Pełna lista ICE serverów — TURN jeśli wstrzyknięty, inaczej sam STUN. */
+export const ICE_SERVERS: TurnServer[] =
+  (typeof __TURN_ICE__ !== 'undefined' && __TURN_ICE__) || ICE_FALLBACK;
+
 // ---- Jetman (fizyka w duchu Gravity Force / Jetmen Revival) ----
 
 /** Promień jetmana (kolizja kołowa z tilemapą i pociskami). */

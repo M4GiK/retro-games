@@ -152,6 +152,10 @@ export class Session {
 
   private hostOnMsg(msg: NetMsg, from: string): void {
     if (msg.t === 'hi') {
+      // Gość wysyła 'hi' wielokrotnie (od razu + onPeerJoin + co 800 ms)
+      // aż dostanie 'lobby' — deduplikuj po peerId, nie dodawaj duplikatów.
+      const existing = this.players.find(pl => pl.peerId === from);
+      if (existing) { this.broadcastLobby(); return; }
       const free = this.freeSlot();
       if (free < 0) { this.transport.send({ t: 'full' }, from); return; }
       this.players.push({ slot: free, peerId: from, name: msg.name, w1: msg.w1, w2: msg.w2 });

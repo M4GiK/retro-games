@@ -17,5 +17,7 @@ await esbuild.build({
   platform: 'node',
   target: 'es2020',
   logLevel: 'warning',
+  // Testy nie potrzebują TURN — wstrzyknij null (fallback STUN).
+  define: { __TURN_ICE__: 'null' },
 });
 await import(pathToFileURL(out).href);

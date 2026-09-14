@@ -14,6 +14,9 @@ dist/
 .env
 .env.*
 
+# Poświadczenia TURN (wstrzykiwane do bundla przez build.mjs — nie w repo)
+turn.secrets.json
+
 # Katalogi edytorów/IDE
 .idea/
 .vscode/

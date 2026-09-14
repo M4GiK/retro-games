@@ -27,8 +27,12 @@ jobs:
             jetman-online/package-lock.json
       - run: npm ci && npm run typecheck && npm run build
         working-directory: kurkarurka
-      - run: npm ci && npm run typecheck && npm run build
+      - run: npm ci && npm run typecheck && npm run test:sim && npm run test:net && npm run build
         working-directory: jetman-online
+        env:
+          # Poświadczenia TURN (ICE servers JSON) — sekret repo, nie w kodzie.
+          # Bez niego build ma tylko STUN → gra online nie zadziała przez NAT.
+          TURN_ICE_SERVERS: ${{ secrets.TURN_ICE_SERVERS }}
       # Launcher (root index.html) linkuje relatywnie do covers/ i
       # <gra>/dist/ — katalog strony musi odzwierciedlać layout repo.
       - run: |
