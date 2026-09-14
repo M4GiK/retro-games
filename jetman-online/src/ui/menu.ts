@@ -2,10 +2,14 @@
  * Menu / lobby / ekran końcowy — nakładki DOM nad canvasem (ticket D).
  *
  * Ekrany zdefiniowane w src/index.html: #menu #join #lobby #over.
- * Menu główne to stalowe karty trybów — nawigacja ↑↓/←→ + Enter albo
- * dotyk (jedno dotknięcie = wybór + start). Ekran DOŁĄCZ ma klawiaturę
- * ekranową z alfabetu ROOM_CODE_CHARS — kod da się wpisać bez
- * fizycznej klawiatury (klawisze A-Z/2-9, Backspace i Enter też działają).
+ * Każdy ekran obsługuje wspólną nawigację nav(PadAction) — strzałki
+ * z klawiatury i RetroPada wpadają w ten sam lejek:
+ *  - menu: ↑↓/←→ kursor po kartach, ok = wybór,
+ *  - join: siatka klawiszy ekranowych (8 kolumn jak w CSS .pad) +
+ *    rząd przycisków; fizyczne znaki/Backspace działają niezależnie,
+ *  - lobby/over: liniowy fokus (selecty + przyciski); ←→ na selekcie
+ *    przewija opcje bez otwierania listy, back = wyjście do menu.
+ * Dotyk/mysz: dotknięcie elementu przesuwa na niego fokus i klika.
  * Lobby ma wybór broni (primary/secondary) i mapy (host); zmiana broni
  * emituje onLoadout → session.setLoadout → 'loadout' do hosta.
  * Deep-link: ?room=KOD — main.ts odpala join po splashu.
@@ -17,6 +21,7 @@ import { LEVELS } from '../core/level';
 import { ROOM_CODE_CHARS, ROOM_CODE_LEN } from '../core/config';
 import { uiMove, uiOk } from '../audio/sfx';
 import type { WeaponId } from '../core/types';
+import type { PadAction } from './gamepad';
 
 export interface MenuHandlers {
   onCreate(w1: WeaponId, w2: WeaponId): void;
@@ -32,14 +37,68 @@ const $ = (s: string) => document.querySelector(s) as HTMLElement;
 
 type ScreenId = 'menu' | 'join' | 'lobby' | 'over' | 'none';
 
+/** Klawisz → akcja nawigacji (wspólna dla klawiatury i RetroPada). */
+const KEY_ACTION: Record<string, PadAction> = {
+  ArrowUp: 'up', w: 'up', W: 'up',
+  ArrowDown: 'down', s: 'down', S: 'down',
+  ArrowLeft: 'left', a: 'left', A: 'left',
+  ArrowRight: 'right', d: 'right', D: 'right',
+  Enter: 'ok', ' ': 'ok',
+  Escape: 'back',
+};
+
+// Głowa pilota w rogu menu — wzór z okładki covers/jetman.jpg: biały
+// hełm z niebieskim pasem i wielkim wizjerem z cyjanowym odblaskiem.
+const PILOT_HEAD = [
+  '......WWWWWW......',
+  '....WWLLLLLLWW....',
+  '...WLWWWWWWWWLW...',
+  '..WLWWWWWWWWWWLW..',
+  '..WAAAAAAAAAAAAW..',
+  '.WABBBBBBBBBBBBAW.',
+  '.DABCCBBBBBBBBBAD.',
+  '.DABBCCBBBBBVBBAD.',
+  '.DABBBCCBBBVVBBAD.',
+  '.DABBBBBBBVVVBBAD.',
+  '.DAABBBVVVVVBBAAD.',
+  '..DDDDDDDDDDDDDD..',
+  '..DGLLLLLLLLLLGD..',
+  '...GLLGLGLLGLLG...',
+  '....GGGGGGGGGG....',
+  '...DDDDDDDDDDDD...',
+  '..DGLLGGGGGGLLGD..',
+];
+
+const PAL_HEAD: Record<string, string> = {
+  W: '#f4f9ff',   // biel hełmu
+  L: '#b7c6de',   // jasny metal
+  G: '#66779a',   // cień metalu
+  D: '#1f2a44',   // obrys / rama wizjera
+  A: '#2f6fe4',   // niebieski pas i obramowanie wizjera
+  B: '#0d2b6e',   // wizjer
+  V: '#2a5fd0',   // wizjer — połysk
+  C: '#9fd8ff',   // odblask cyjan
+};
+
 export class Menu {
-  /** Aktywny ekran — dispatch klawiatury działa tylko na 'menu'/'join'. */
+  /** Aktywny ekran — dispatch nawigacji działa poza grą ('none'). */
   private cur: ScreenId = 'none';
   private menuSel = 0;
   private readonly menuItems: HTMLElement[];
   /** Kod wpisywany na ekranie DOŁĄCZ (klawiatura ekranowa + fizyczna). */
   private code = '';
   private readonly slotEls: HTMLElement[] = [];
+  /** Klawisze ekranowe DOŁĄCZ — kolejność = ROOM_CODE_CHARS. */
+  private readonly keyEls: HTMLElement[] = [];
+  /** Przyciski DOŁĄCZ: WSTECZ / SKASUJ / DOŁĄCZ. */
+  private readonly joinBtns: HTMLElement[] = [];
+  /** Fokus na 'join': siatka klawiszy albo rząd przycisków. */
+  private joinZone: 'grid' | 'btns' = 'grid';
+  private keyIdx = 0;
+  private btnIdx = 0;
+  /** Liniowy fokus dla lobby/over — elementy ustawiane per ekran. */
+  private navEls: HTMLElement[] = [];
+  private navIdx = 0;
 
   constructor(private readonly h: MenuHandlers) {
     this.fillWeapons();
@@ -69,14 +128,37 @@ export class Menu {
       b.type = 'button';
       b.className = 'key';
       b.textContent = ch;
-      b.addEventListener('pointerdown', e => { e.preventDefault(); this.keyChar(ch); });
+      const i = this.keyEls.length;
+      this.keyEls.push(b);
+      b.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        this.joinZone = 'grid';
+        this.keyIdx = i;
+        this.renderFocus();
+        this.keyChar(ch);
+      });
       pad.appendChild(b);
     }
+    this.joinBtns.push($('#btnBack1'), $('#btnDel'), $('#btnGo'));
+    this.joinBtns.forEach((b, i) =>
+      b.addEventListener('pointerdown', () => {
+        this.joinZone = 'btns';
+        this.btnIdx = i;
+        this.renderFocus();
+      }));
     const slots = $('#joinSlots');
     for (let i = 0; i < ROOM_CODE_LEN; i++) {
       const s = document.createElement('span');
       slots.appendChild(s);
       this.slotEls.push(s);
+    }
+    // Dotyk elementu nawigacji (select/przycisk) = fokus na nim.
+    for (const id of ['selW1', 'selW2', 'selMap', 'btnStart', 'btnBack2', 'btnAgain', 'btnBack3']) {
+      const el = $(`#${id}`);
+      el.addEventListener('pointerdown', () => {
+        const i = this.navEls.indexOf(el);
+        if (i >= 0) { this.navIdx = i; this.renderFocus(); }
+      });
     }
     for (const id of ['selW1', 'selW2']) {
       $(`#${id}`).addEventListener('change', () => {
@@ -84,6 +166,21 @@ export class Menu {
         h.onLoadout(w1, w2);
       });
     }
+    this.drawPilotHead();
+  }
+
+  /** Rasteryzuje PILOT_HEAD na canvas w rogu menu (jak raster() w sprites.ts). */
+  private drawPilotHead(): void {
+    const c = (document.querySelector('#pilotHead') as HTMLCanvasElement)
+      .getContext('2d')!;
+    PILOT_HEAD.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const col = PAL_HEAD[row[x]];
+        if (!col) continue;
+        c.fillStyle = col;
+        c.fillRect(x, y, 1, 1);
+      }
+    });
   }
 
   /** Wybrane bronie z selectów (w1, w2). */
@@ -158,11 +255,138 @@ export class Menu {
 
   /** Pokaż jeden ekran, resztę schowaj. 'none' = gra (same canvas). */
   show(which: ScreenId): void {
+    const changed = this.cur !== which;
     this.cur = which;
     for (const id of ['menu', 'join', 'lobby', 'over']) {
       $(`#${id}`).hidden = id !== which;
     }
-    if (which === 'join') { this.code = ''; this.renderCode(); this.error('join', ''); }
+    if (which === 'join' && changed) {
+      this.code = ''; this.renderCode(); this.error('join', '');
+    }
+    // Fokus resetowany tylko przy realnej zmianie ekranu — odświeżenia
+    // (np. dołączenie gracza w lobby) nie zabierają kursora.
+    if (changed) {
+      this.navIdx = 0;
+      this.keyIdx = 0;
+      this.joinZone = 'grid';
+      this.renderFocus();
+    }
+  }
+
+  /**
+   * Wspólna nawigacja UI — strzałki z klawiatury (onKey) i RetroPada
+   * (pad.onAction) wpadają tu jako te same akcje.
+   */
+  nav(a: PadAction): void {
+    if (this.cur === 'menu') {
+      if (a === 'up' || a === 'left') this.menuMove(-1);
+      else if (a === 'down' || a === 'right') this.menuMove(1);
+      else if (a === 'ok') this.activate();
+      return;
+    }
+    if (this.cur === 'join') { this.joinNav(a); return; }
+    if (this.cur === 'lobby' || this.cur === 'over') this.linearNav(a);
+  }
+
+  /**
+   * DOŁĄCZ: siatka klawiszy (8 kolumn jak w CSS .pad) + rząd przycisków.
+   * ok na siatce = wpisz znak, a przy pełnym kodzie = DOŁĄCZ (Enter
+   * po wpisaniu 4 znaków od razu wysyła — bez skakania po przyciskach).
+   */
+  private joinNav(a: PadAction): void {
+    const COLS = 8; // szerokość siatki .pad w index.html
+    const len = this.keyEls.length;
+    const rows = Math.ceil(len / COLS);
+    if (a === 'back') { this.show('menu'); return; }
+    if (a === 'ok') {
+      if (this.joinZone === 'btns') {
+        uiOk();
+        this.joinBtns[this.btnIdx]?.click();
+      } else if (this.code.length >= ROOM_CODE_LEN) {
+        this.submitCode();
+      } else {
+        const ch = ROOM_CODE_CHARS[this.keyIdx];
+        if (ch) this.keyChar(ch);
+      }
+      return;
+    }
+    if (this.joinZone === 'grid') {
+      const row = Math.floor(this.keyIdx / COLS);
+      const col = this.keyIdx % COLS;
+      if (a === 'left') this.keyIdx = row * COLS + (col + COLS - 1) % COLS;
+      else if (a === 'right') this.keyIdx = row * COLS + (col + 1) % COLS;
+      else if (a === 'up') {
+        this.keyIdx = Math.min(len - 1, ((row + rows - 1) % rows) * COLS + col);
+      } else if (a === 'down') {
+        if (row < rows - 1) this.keyIdx = Math.min(len - 1, (row + 1) * COLS + col);
+        else {
+          this.joinZone = 'btns';
+          this.btnIdx = Math.round(col * (this.joinBtns.length - 1) / (COLS - 1));
+        }
+      }
+    } else {
+      if (a === 'left' || a === 'right') {
+        const d = a === 'left' ? -1 : 1;
+        this.btnIdx = (this.btnIdx + d + this.joinBtns.length) % this.joinBtns.length;
+      } else if (a === 'up') {
+        this.joinZone = 'grid';
+        const col = Math.round(this.btnIdx * (COLS - 1) / (this.joinBtns.length - 1));
+        this.keyIdx = Math.min(len - 1, (rows - 1) * COLS + col);
+      }
+    }
+    this.renderFocus();
+    uiMove();
+  }
+
+  /** Lobby / koniec rundy: ↑↓/←→ ruch fokusu; ←→ na selekcie zmienia opcję. */
+  private linearNav(a: PadAction): void {
+    const el = this.navEls[this.navIdx];
+    if (!el) return;
+    if (a === 'ok') {
+      if (el instanceof HTMLSelectElement) this.cycleSel(el, 1);
+      else { uiOk(); el.click(); }
+      return;
+    }
+    if (a === 'back') { this.h.onLeave(); this.show('menu'); return; }
+    if (el instanceof HTMLSelectElement && (a === 'left' || a === 'right')) {
+      this.cycleSel(el, a === 'left' ? -1 : 1);
+      return;
+    }
+    const d = (a === 'up' || a === 'left') ? -1 : 1;
+    this.navIdx = (this.navIdx + d + this.navEls.length) % this.navEls.length;
+    this.renderFocus();
+    uiMove();
+  }
+
+  /** Ustawia liniowo fokusowalne elementy bieżącego ekranu. */
+  private setNav(els: HTMLElement[]): void {
+    this.navEls = els;
+    if (this.navIdx >= els.length) this.navIdx = 0;
+    this.renderFocus();
+  }
+
+  /** Select bez otwierania listy — ←→ przewija opcje z zapętleniem. */
+  private cycleSel(sel: HTMLSelectElement, d: number): void {
+    const n = sel.options.length;
+    if (n === 0) return;
+    sel.selectedIndex = (((sel.selectedIndex + d) % n) + n) % n;
+    sel.dispatchEvent(new Event('change'));
+    uiMove();
+  }
+
+  /** Podświetla aktualny fokus (.foc) — join ma własny układ (grid+btns). */
+  private renderFocus(): void {
+    document.querySelectorAll('.foc').forEach(e => e.classList.remove('foc'));
+    let el: HTMLElement | undefined;
+    if (this.cur === 'join') {
+      el = this.joinZone === 'grid'
+        ? this.keyEls[this.keyIdx]
+        : this.joinBtns[this.btnIdx];
+    } else if (this.cur === 'lobby' || this.cur === 'over') {
+      el = this.navEls[this.navIdx];
+    }
+    el?.classList.add('foc');
+    el?.scrollIntoView({ block: 'nearest' });
   }
 
   /** Podświetla wybraną pozycję listy menu. */
@@ -191,25 +415,15 @@ export class Menu {
     }
   }
 
-  /** Klawiatura: 'menu' kursor + Enter; 'join' znaki/Backspace/Enter/Escape. */
+  /** Klawiatura: na 'join' znaki/Backspace lecą do kodu, reszta → nav(). */
   private onKey(e: KeyboardEvent): void {
     if (this.cur === 'join') {
-      if (e.key === 'Escape') { this.show('menu'); return; }
       if (e.key === 'Backspace') { this.keyDel(); return; }
-      if (e.key === 'Enter') { this.submitCode(); return; }
       const ch = e.key.toUpperCase();
-      if (ch.length === 1 && ROOM_CODE_CHARS.includes(ch)) this.keyChar(ch);
-      return;
+      if (ch.length === 1 && ROOM_CODE_CHARS.includes(ch)) { this.keyChar(ch); return; }
     }
-    if (this.cur !== 'menu') return;
-    const k = e.key;
-    if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'ArrowLeft' || k === 'a' || k === 'A') {
-      this.menuMove(-1);
-    } else if (k === 'ArrowDown' || k === 's' || k === 'S' || k === 'ArrowRight' || k === 'd' || k === 'D') {
-      this.menuMove(1);
-    } else if (k === 'Enter' || k === ' ') {
-      this.activate();
-    }
+    const a = KEY_ACTION[e.key];
+    if (a) { e.preventDefault(); this.nav(a); }
   }
 
   /** Lobby: kod + gracze z loadoutem + bronie + mapa (host) + START. */
@@ -235,6 +449,11 @@ export class Menu {
       ($('#selW1') as HTMLSelectElement).value = me.w1;
       ($('#selW2') as HTMLSelectElement).value = me.w2;
     }
+    // Fokusowalne elementy w kolejności ekranowej (host ma mapę+START).
+    const nav: HTMLElement[] = [$('#selW1'), $('#selW2')];
+    if (isHost) nav.push($('#selMap'), $('#btnStart'));
+    nav.push($('#btnBack2'));
+    this.setNav(nav);
   }
 
   /** Ekran końca rundy. */
@@ -244,6 +463,7 @@ export class Menu {
     $('#overScores').innerHTML = players
       .map(p => `<li><span>${esc(p.name)}</span><span>${p.score} PKT</span></li>`)
       .join('');
+    this.setNav([$('#btnAgain'), $('#btnBack3')]);
   }
 
   error(screen: 'menu' | 'join', msg: string): void {

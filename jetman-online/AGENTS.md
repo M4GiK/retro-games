@@ -41,7 +41,7 @@ Zasada: jeden agent = jeden ticket = własne pliki. Pliki z kolumny
 | **A — sim** | `core/physics.ts`, `core/sim.ts` | `types.ts`, `config.ts`, `weapons.ts`, `level.ts` | fizyka statku/pilota (paliwo, energia, tether flagi, bail-out), bronie z tabeli WEAPONS, niszczenie terenu, flagi CTF, życia. Weryfikacja: `npm run test:sim` |
 | **B — netcode** | `net/session.ts`, `net/local.ts`, `net/trystero.ts`, `game/hostLoop.ts`, `game/guestLoop.ts` | `protocol.ts`, `transport.ts` | lobby+loadout, inputy→host (seq/ack), snapshoty→goście, replay predykcji, adaptacyjna interpolacja |
 | **C — render** | `render/scene.ts`, `render/sprites.ts`, `render/hud.ts`, `render/effects.ts` | `types.ts` (SimState), `SimEvent` | sprite'y statek/pilot, warstwa terenu (invalidateTerrain po 'terrain'), kamera, radar, HUD pasków. Dev bez sieci: `?demo` |
-| **D — UI** | `ui/menu.ts`, `src/index.html` (warstwa DOM) | `protocol.ts` (PlayerSlot) | ekrany menu/join/lobby/over, wybór broni (w1/w2) i mapy, `?room=KOD` deep-link |
+| **D — UI** | `ui/menu.ts`, `ui/gamepad.ts`, `src/index.html` (warstwa DOM) | `protocol.ts` (PlayerSlot) | ekrany menu/join/lobby/over, wybór broni (w1/w2) i mapy, nawigacja strzałkami (menu.nav), RetroPad na dotyk, `?room=KOD` deep-link |
 | **E — audio** | `audio/sfx.ts` | `types.ts` (SimEvent) | syntezowane SFX: ogień per broń, boom, bail-out, splash stref |
 | **F — poziomy** | `core/level.ts` (tablica LEVELS) | `LevelData`, znaki tilemapy | mapy dowolnego rozmiaru; znaki: `#` skała, `X` twarda, `w/s/g` strefy, `0-3` bazy |
 

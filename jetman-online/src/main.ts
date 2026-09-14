@@ -13,7 +13,7 @@
 import { createSim, stepSim } from './core/sim';
 import { LEVELS } from './core/level';
 import { TICK_MS } from './core/config';
-import { IN_RIGHT, IN_THRUST, type SimEvent, type SimState, ZONE_WATER } from './core/types';
+import { IN_FIRE, IN_FIRE2, IN_LEFT, IN_RIGHT, IN_THRUST, type SimEvent, type SimState, ZONE_WATER } from './core/types';
 import { drawScene, invalidateTerrain, addShake, splatBlood, clearBlood } from './render/scene';
 import { HostLoop } from './game/hostLoop';
 import { GuestLoop } from './game/guestLoop';
@@ -27,6 +27,7 @@ import { Effects } from './render/effects';
 import { playEvents, setThrust, audioUnlocked, runAudio, toneAt, noiseAt, cancelScheduled } from './audio/sfx';
 import { playMusic, toggleMusicMute } from './audio/music';
 import { Menu } from './ui/menu';
+import { RetroPad } from './ui/gamepad';
 import { SplashScreen } from './ui/splash';
 import type { NetMsg, PlayerSlot } from './core/protocol';
 import type { WeaponId } from './core/types';
@@ -100,6 +101,22 @@ const menu = new Menu({
   },
 });
 
+// RetroPad — ekranowy pad NES dla urządzeń dotykowych (albo ?pad na PC).
+// Krzyżak/A/B trzymają stany w `bits` (czytane co tick jak klawiatura),
+// zbocza z onAction nawigują menu (A/START=ok, B/SELECT=back).
+const pad = new RetroPad(document.body, {
+  left: IN_LEFT, right: IN_RIGHT, up: IN_THRUST, down: IN_FIRE,
+  a: IN_FIRE, b: IN_FIRE2,
+});
+pad.onAction = a => menu.nav(a);
+const padOn = params.has('pad') || navigator.maxTouchPoints > 0 ||
+  matchMedia('(pointer: coarse)').matches;
+pad.show(padOn);
+// Rezerwuje dół ekranu pod pada — patrz --padh w index.html.
+document.body.classList.toggle('haspad', padOn);
+/** Wejście gracza: klawiatura OR ekranowy pad — jedna bitmaska IN_*. */
+const ownBits = () => input.getBits() | pad.bits;
+
 const sessionEvents = {
   onLobby: (players: PlayerSlot[], mySlot: number) => {
     if (session) menu.showLobby(session.code, players, mySlot, session.role === 'host');
@@ -109,16 +126,17 @@ const sessionEvents = {
     effects.clear();
     clearBlood(LEVELS[level]);
     input.clear();
+    pad.clear();
     playMusic('game');
     if (!session) return;
     if (session.role === 'host') {
-      host = new HostLoop(session, level, seed, input.getBits, {
+      host = new HostLoop(session, level, seed, ownBits, {
         onEvents: ev => handleEvents(host!.sim, ev),
         onOver: showOver,
       });
       host.start();
     } else {
-      guest = new GuestLoop(session, level, input.getBits, {
+      guest = new GuestLoop(session, level, ownBits, {
         onEvents: ev => handleEvents(guest!.state, ev),
         onOver: showOver,
       });
@@ -164,6 +182,7 @@ function startDemo(): void {
   menu.show('none');
   effects.clear();
   clearBlood(LEVELS[menu.mapIdx()]);
+  pad.clear();
   playMusic('game');
   const me = { name: 'TY', w1: menu.loadout()[0], w2: menu.loadout()[1] };
   const bot = { name: 'BOT', w1: 'minigun' as WeaponId, w2: 'rocket' as WeaponId };
@@ -175,7 +194,7 @@ function startDemo(): void {
     while (acc >= TICK_MS) {
       acc -= TICK_MS;
       const botBits = IN_RIGHT | ((sim.tick % 120) < 80 ? IN_THRUST : 0);
-      const ev = stepSim(sim, [input.getBits(), botBits]);
+      const ev = stepSim(sim, [ownBits(), botBits]);
       handleEvents(sim, ev);
       if (sim.phase === 'over') { demo = null; leaveAll(); menu.show('menu'); return; }
     }

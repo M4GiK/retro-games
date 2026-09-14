@@ -13,8 +13,13 @@ html,body{height:100%;margin:0;overscroll-behavior:none;background:#000;
   font-family:'Press Start 2P','Courier New',monospace;color:#f4f4f4;overflow:hidden;
   user-select:none;-webkit-user-select:none}
 body{display:flex;align-items:center;justify-content:center}
-/* Scena: stały świat 256x240 skalowany w górę przez CSS */
-#stage{position:relative;width:min(96vw,calc(96vh*256/240));aspect-ratio:256/240}
+/* Scena: stały świat 256x240 skalowany w górę przez CSS. Klasa .haspad
+   na <body> (RetroPad włączony) rezerwuje dół pod ekranowy pad. */
+:root{--padh:0px}
+body.haspad{--padh:132px}
+#stage{position:relative;aspect-ratio:256/240;container-type:size;
+  width:min(96vw,max(200px,calc((96vh - var(--padh))*256/240)));
+  width:min(96vw,max(200px,calc((96dvh - var(--padh))*256/240)))}
 #game{position:absolute;inset:0;width:100%;height:100%;background:#05081e;
   border:3px solid #1c3568;box-shadow:0 0 40px rgba(40,120,255,.22)}
 /* Scanliny CRT + winieta nad obrazem */
@@ -31,7 +36,8 @@ body{display:flex;align-items:center;justify-content:center}
    (kafelki gradientów o różnych rozmiarach) i łuna eksplozji przy
    dolnym horyzoncie. Checkerboard-dithering zostaje na ::before. */
 .overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:11px;
+  align-items:center;justify-content:center;justify-content:safe center;
+  gap:12px;overflow-y:auto;
   text-transform:uppercase;text-align:center;padding:12px;
   background:
     radial-gradient(6px 6px at 76.5% 12%,rgba(86,104,154,.85) 60%,transparent 63%),
@@ -43,10 +49,13 @@ body{display:flex;align-items:center;justify-content:center}
     radial-gradient(1.8px 1.8px at 46% 12%,#fff 55%,transparent 62%),
     radial-gradient(1.3px 1.3px at 84% 52%,#ffe9c8 55%,transparent 62%),
     radial-gradient(1.5px 1.5px at 10% 80%,#bfe0ff 55%,transparent 62%),
+    radial-gradient(1.2px 1.2px at 60% 44%,#ffd9a0 55%,transparent 62%),
+    radial-gradient(1.1px 1.1px at 14% 56%,#8fb8ff 55%,transparent 62%),
+    radial-gradient(52% 26% at 16% 28%,rgba(98,60,190,.14),transparent 70%),
     radial-gradient(85% 42% at 50% 108%,rgba(248,110,10,.34),rgba(180,40,0,.12) 55%,transparent 75%),
     linear-gradient(180deg,#03051a 0%,#070d2e 55%,#111c4e 100%);
   background-size:auto,auto,auto,auto,124px 124px,168px 150px,96px 96px,
-    200px 180px,148px 132px,auto,auto}
+    200px 180px,148px 132px,180px 160px,142px 196px,auto,auto,auto}
 .overlay::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:repeating-conic-gradient(rgba(0,0,0,.16) 0% 25%,transparent 0% 50%);
   background-size:4px 4px}
@@ -64,10 +73,10 @@ h1.logo{font-size:clamp(19px,6.5vw,32px);letter-spacing:1px;line-height:1;
 h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
   text-transform:lowercase;-webkit-text-fill-color:#f4f8ff;
   filter:drop-shadow(1px 1px 0 #f8720a) drop-shadow(2px 2px 0 #1a0800)}
-.sub{font-size:7px;color:#8fb0d8;letter-spacing:2px;margin:0;line-height:1.8}
+.sub{font-size:8px;color:#8fb0d8;letter-spacing:2px;margin:0;line-height:1.8}
 .btn{border:2px solid #3a1500;background:linear-gradient(180deg,#ffbe4a,#f87d0a);
-  color:#241000;font-family:inherit;font-size:9px;letter-spacing:2px;
-  padding:12px 18px;cursor:pointer;min-width:190px;text-transform:uppercase;
+  color:#241000;font-family:inherit;font-size:10px;letter-spacing:2px;
+  padding:14px 20px;cursor:pointer;min-width:210px;text-transform:uppercase;
   box-shadow:0 3px 0 #3a1500,inset 0 1px 0 #ffe6b0}
 .btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffe6b0}
 .btn.ghost{background:linear-gradient(180deg,#2c4a86,#16264e);color:#cfe0f8;
@@ -75,53 +84,133 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
 .btn.ghost:active{box-shadow:inset 0 1px 0 #5d84c8}
 .btn[disabled]{background:linear-gradient(180deg,#1c2a4e,#101a34);color:#5f7ca8;
   border-color:#050a1c;box-shadow:0 3px 0 #050a1c;cursor:default;transform:none}
-/* Menu główne — stalowe karty trybów jak na okładce; tap = wybór + start */
+/* Menu główne — duże stalowe karty trybów jak na okładce;
+   tap = wybór + start, strzałki/pad = kursor */
 #menuList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;
-  gap:9px;width:min(230px,88%)}
-#menuList li{font-size:clamp(9px,2.6vw,12px);color:#cfe0f8;padding:10px 14px;
+  gap:12px;width:min(300px,92%)}
+#menuList li{font-size:clamp(11px,3vw,14px);color:#cfe0f8;padding:14px 18px;
   cursor:pointer;letter-spacing:2px;border:2px solid #050a1c;
   background:linear-gradient(180deg,#2c4a86,#16264e);
   box-shadow:0 3px 0 #050a1c,inset 0 1px 0 #5d84c8}
-#menuList li small{display:block;font-size:6px;letter-spacing:1px;
-  color:#8fb0d8;margin-top:6px}
+#menuList li small{display:block;font-size:7px;letter-spacing:1px;
+  color:#8fb0d8;margin-top:7px}
 #menuList li.sel{color:#fff;border-color:#00e5ff;
   background:linear-gradient(180deg,#3a5fae,#1c3170);
   box-shadow:0 3px 0 #050a1c,0 0 12px rgba(0,229,255,.45),inset 0 1px 0 #7fb0ee;
   text-shadow:2px 2px 0 #f83800}
 #menuList li.sel small{color:#ffd9a0;text-shadow:1px 1px 0 #3a1500}
 #menuList li.sel::before{content:'▶ ';color:#ffbe4a}
-/* Ekran DOŁĄCZ — sloty kodu + klawiatura ekranowa (bez fizycznej) */
-.slots{display:flex;gap:8px}
-.slots span{width:30px;height:36px;display:flex;align-items:center;
-  justify-content:center;font-size:14px;color:#ffbe4a;background:#050a20;
+/* Animowana warstwa tła menu: mrugające gwiazdy, komety, głowa pilota.
+   .space siedzi pod tekstem (z-index:-1), nad malowanym tłem .overlay —
+   hidden na .overlay wyłącza animacje, więc restartują się przy wejściu. */
+.space{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.st{position:absolute;width:1px;height:1px;background:#fff;
+  animation:tw 2.6s ease-in-out infinite}
+.st.a{left:14%;top:18%;
+  box-shadow:10vh 5vh 0 #bfe0ff,24vh 11vh 0 #fff,36vh -7vh 0 #ffe9c8}
+.st.b{left:50%;top:32%;width:2px;height:2px;animation-duration:3.4s;
+  animation-delay:-1.2s;box-shadow:9vh -9vh 0 #fff,20vh 7vh 0 #bfe0ff}
+.st.c{left:82%;top:56%;animation-duration:2s;animation-delay:-.7s;
+  box-shadow:-11vh 8vh 0 #ffe9c8,7vh -12vh 0 #fff,-26vh 13vh 0 #bfe0ff}
+/* Gwiazda-iskra — pulsujący krzyżyk */
+.spark{position:absolute;width:1px;height:5px;background:#eaf6ff;
+  animation:tw 3.2s ease-in-out infinite}
+.spark::before{content:'';position:absolute;left:-2px;top:2px;width:5px;
+  height:1px;background:inherit}
+.spark.s1{left:32%;top:12%}
+.spark.s2{left:70%;top:64%;animation-duration:4.1s;animation-delay:-2s}
+/* Kometa — jasna głowa + gradientowy warkocz, przelot po przekątnej;
+   rotate(-20deg) ustawia warkocz pod kątem toru lotu (lewo-dół) */
+.comet{position:absolute;width:3px;height:3px;background:#eaf6ff;opacity:0;
+  box-shadow:0 0 5px rgba(150,210,255,.9);transform:rotate(-20deg)}
+.comet::after{content:'';position:absolute;top:0;right:2px;width:26px;
+  height:3px;background:linear-gradient(90deg,transparent,rgba(140,200,255,.55))}
+.comet.c1{animation:cometA 13s linear infinite}
+.comet.c2{animation:cometB 19s -8s linear infinite}
+@keyframes tw{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes cometA{0%{left:104%;top:9%;opacity:0}3%{opacity:1}
+  24%{left:-14%;top:44%;opacity:1}27%{left:-17%;top:47%;opacity:0}
+  100%{left:-17%;top:47%;opacity:0}}
+@keyframes cometB{0%{left:70%;top:-6%;opacity:0}2%{opacity:1}
+  16%{left:-8%;top:26%;opacity:1}19%{left:-12%;top:29%;opacity:0}
+  100%{left:-12%;top:29%;opacity:0}}
+/* Głowa pilota z okładki — wjeżdża z lewej przy pokazaniu menu i dryfuje */
+#pilotHead{position:absolute;left:4px;bottom:4px;width:clamp(48px,20%,72px);
+  height:auto;animation:pilotIn .9s cubic-bezier(.3,1.35,.4,1) .45s both,
+    pilotBob 3.8s ease-in-out 1.7s infinite}
+@keyframes pilotIn{from{transform:translateX(-140%) rotate(-16deg)}
+  to{transform:translateX(0) rotate(-6deg)}}
+@keyframes pilotBob{0%,100%{transform:translateY(0) rotate(-6deg)}
+  50%{transform:translateY(-3px) rotate(-3deg)}}
+/* Ekran DOŁĄCZ — sloty kodu + klawiatura ekranowa (bez fizycznej);
+   strzałki/pad jeżdżą po siatce klawiszy (fokus .foc) */
+.slots{display:flex;gap:9px}
+.slots span{width:36px;height:44px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;color:#ffbe4a;background:#050a20;
   border:2px solid #24427e;text-shadow:2px 2px 0 #3a1500}
 .slots span.on{border-color:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.35)}
 .slots span.next{border-style:dashed;border-color:#5d84c8;
   animation:blink 1s steps(2) infinite}
-.pad{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;width:min(248px,92%)}
-.key{font-family:inherit;font-size:clamp(8px,2vw,10px);padding:9px 0;
+.pad{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;width:min(304px,94%)}
+.key{font-family:inherit;font-size:clamp(9px,2.2vw,11px);padding:11px 0;
   cursor:pointer;color:#cfe0f8;background:linear-gradient(180deg,#2c4a86,#16264e);
   border:2px solid #050a1c;box-shadow:0 2px 0 #050a1c,inset 0 1px 0 #5d84c8}
 .key:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #5d84c8}
-.row{display:flex;gap:8px;width:min(280px,94%)}
-.row .btn{min-width:0;padding:12px 8px;flex:1}
-.codebox{font-size:16px;letter-spacing:8px;color:#ffbe4a;border:3px dashed #3a5fae;
-  padding:8px 14px;text-shadow:2px 2px 0 #3a1500}
-.plist{list-style:none;margin:0;padding:0;font-size:8px;letter-spacing:2px;
-  display:flex;flex-direction:column;gap:6px;min-width:220px}
-.plist li{border:2px solid #24427e;padding:7px;color:#c8d4ea;display:flex;
+.row{display:flex;gap:9px;width:min(320px,96%)}
+.row .btn{min-width:0;padding:14px 8px;flex:1}
+.codebox{font-size:18px;letter-spacing:9px;color:#ffbe4a;border:3px dashed #3a5fae;
+  padding:9px 16px;text-shadow:2px 2px 0 #3a1500}
+.plist{list-style:none;margin:0;padding:0;font-size:9px;letter-spacing:2px;
+  display:flex;flex-direction:column;gap:7px;min-width:min(260px,94%)}
+.plist li{border:2px solid #24427e;padding:8px;color:#c8d4ea;display:flex;
   justify-content:space-between;gap:10px;background:rgba(6,11,36,.6)}
 .plist li.me{border-color:#00e5ff;color:#fcfcfc}
 .plist .dot{color:#00e5ff}
-.plist .wpn{color:#8fb0d8;font-size:7px}
-.selrow{display:flex;gap:8px;align-items:center;font-size:7px;letter-spacing:1px;color:#8fb0d8}
-.selrow select{font-family:inherit;font-size:8px;letter-spacing:1px;background:#060b24;
-  color:#ffbe4a;border:2px solid #24427e;padding:5px;text-transform:uppercase}
+.plist .wpn{color:#8fb0d8;font-size:8px}
+.selrow{display:flex;gap:9px;align-items:center;font-size:8px;letter-spacing:1px;color:#8fb0d8}
+.selrow select{font-family:inherit;font-size:9px;letter-spacing:1px;background:#060b24;
+  color:#ffbe4a;border:2px solid #24427e;padding:7px;text-transform:uppercase}
 .selrow select:focus{border-color:#00e5ff;outline:none}
-.hint{font-size:7px;color:#8fb0d8;letter-spacing:1px;line-height:1.9;margin:0}
-.err{font-size:7px;color:#ff5a2a;letter-spacing:1px;min-height:10px;margin:0}
+/* Fokus nawigacji strzałkami/padem (menu.nav) — ramka + rozjaśnienie */
+.foc{outline:2px solid #00e5ff;outline-offset:2px;filter:brightness(1.25)}
+.hint{font-size:8px;color:#8fb0d8;letter-spacing:1px;line-height:1.9;margin:0}
+.err{font-size:8px;color:#ff5a2a;letter-spacing:1px;min-height:11px;margin:0}
 .blink{animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
+/* Kompakt na niskiej scenie (telefon pionowo, landscape) — menu ma się
+   mieścić bez scrolla; fallback = normalne rozmiary + overflow-y:auto. */
+@container (max-height:460px){
+  .overlay{gap:9px;padding:10px}
+  h1{font-size:clamp(11px,4cqh,15px)}
+  h1.logo{font-size:clamp(17px,8cqh,26px)}
+  .sub{font-size:7px}
+  #menuList{gap:9px;width:min(280px,92%)}
+  #menuList li{font-size:clamp(10px,3.6cqh,13px);padding:11px 15px}
+  #menuList li small{font-size:6px;margin-top:6px}
+  .hint{font-size:7px;line-height:1.7}
+  .err{font-size:7px;min-height:10px}
+  .btn{font-size:9px;padding:11px 16px;min-width:190px}
+  .row{gap:7px}
+  .row .btn{padding:11px 8px}
+  .key{font-size:clamp(8px,2.6cqh,10px);padding:9px 0}
+  .pad{gap:5px;width:min(272px,94%)}
+  .slots{gap:7px}
+  .slots span{width:32px;height:38px;font-size:14px}
+  .codebox{font-size:15px;padding:7px 12px}
+  .plist{font-size:8px;gap:5px;min-width:220px}
+  .plist li{padding:6px}
+  .plist .wpn{font-size:7px}
+  .selrow{font-size:7px;gap:7px}
+  .selrow select{font-size:8px;padding:5px}
+  #pilotHead{width:clamp(40px,14%,56px)}
+}
+@container (max-height:360px){
+  .overlay{gap:7px;padding:8px}
+  #menuList{gap:7px}
+  #menuList li{padding:9px 12px}
+  #menuList li small{display:none}
+  .hint.aux{display:none}
+}
 /* Wyciszenie muzyki w trakcie rundy — nad scanlinami (::after ma z-index 5) */
 #btnMute{position:absolute;top:6px;right:6px;z-index:6;width:26px;height:26px;
   padding:0;font-family:inherit;font-size:11px;line-height:1;cursor:pointer;
@@ -143,6 +232,12 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
 
   <!-- Ekran główny: wybór trybu — stalowe karty, wszystko na dotyk -->
   <div class="overlay" id="menu" hidden>
+    <div class="space" aria-hidden="true">
+      <i class="st a"></i><i class="st b"></i><i class="st c"></i>
+      <i class="spark s1"></i><i class="spark s2"></i>
+      <i class="comet c1"></i><i class="comet c2"></i>
+      <canvas id="pilotHead" width="18" height="17"></canvas>
+    </div>
     <h1 class="logo">JETMAN<span>online</span></h1>
     <p class="sub">POJEDYNEK NA JETPACKACH · 2–4 GRACZY</p>
     <ul id="menuList">
@@ -153,7 +248,7 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
     <p class="hint">◀▶ OBRÓT · ▲ CIĄG · ▼/CTRL OGIEŃ · X BROŃ 2<br>
       FLAGA W BAZIE = 5 PKT · FRAG = 1 PKT<br>
       ZNISZCZONY STATEK = PILOT NA JETPACKU</p>
-    <p class="hint">DOTKNIJ ABY WYBRAĆ (LUB ↑↓ + ENTER)</p>
+    <p class="hint aux">↑↓ WYBÓR · ENTER OK — DZIAŁA TEŻ DOTYK I PAD</p>
     <p class="hint">© 2026 M4GiK Software</p>
     <p class="err" id="menuErr"></p>
   </div>

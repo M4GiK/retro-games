@@ -13,6 +13,9 @@ działa z GitHub Pages.
   od jednego trafienia.
 - **Bronie do wyboru w lobby** (primary `▼/CTRL` + secondary `X`):
   minigun, rakieta, shotgun, laser, mina.
+- **Mobile**: na ekranach dotykowych doklejany jest RetroPad —
+  krzyżak + A (ogień) + B (broń 2) w klimacie NES; w menu D-pad nawiguje,
+  A/START = OK, B/SELECT = wstecz. Na desktopie `?pad` wymusza widok.
 - **Flaga na linie** ciągnięta za nosicielem; doniesienie do bazy = 5 pkt,
   frag = 1 pkt, pula żyć.
 - **Niszczalny teren** (eksplozje wydrążają skałę) i **strefy**:
@@ -62,7 +65,9 @@ src/
   systems/     input (klawiatura → bitmaska, IN_FIRE2 = broń 2)
   render/      scene (kamera, warstwa terenu, radar), sprites, hud, effects
   ui/          menu — nakładki DOM (menu/join/lobby: bronie+mapa/over),
-               splash — intro M4GIK SOFTWARE (CRT, pac-man) jak w kurkarurce
+               splash — intro M4GIK SOFTWARE (CRT, pac-man) jak w kurkarurce,
+               gamepad — RetroPad: ekranowy pad NES (bits + onAction),
+               samowystarczalny komponent do przeniesienia do innych gier
   audio/       sfx — SimEvent → WebAudio (+ blipy UI, jingle splasha),
                music — mp3 z data URI: menu = Last Frame of Glory,
                runda = Thrusters at Maximum (assets/, markery w build.mjs)
