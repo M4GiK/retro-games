@@ -35,6 +35,8 @@ export class Effects {
       switch (e.t) {
         case 'explode':
           this.burst(e.x, e.y, 26, ['#ffcc00', '#f83800', '#fcfcfc'], 1.8);
+          // Giby — krew rozpryskuje się i opada z grawitacją.
+          this.burst(e.x, e.y, 18, ['#d82800', '#a01414', '#6e0c0c'], 2.0);
           break;
         case 'boom':
           this.burst(e.x, e.y, Math.min(40, 8 + e.r), ['#f83800', '#ffcc00', '#7a7a9e'], 2.4);

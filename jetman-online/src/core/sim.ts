@@ -310,11 +310,12 @@ function fireLaser(sim: SimState, jet: JetState, def: WeaponDef, ev: SimEvent[])
   const cos = Math.cos(jet.angle), sin = Math.sin(jet.angle);
   let x = jet.x, y = jet.y;
   let hitX = x + cos * 220, hitY = y + sin * 220;
+  let hitRock = false;
   outer:
   for (let d = 0; d < 220; d += 2) {
     x = jet.x + cos * d;
     y = jet.y + sin * d;
-    if (isSolid(sim.level, x, y)) { hitX = x; hitY = y; break; }
+    if (isSolid(sim.level, x, y)) { hitX = x; hitY = y; hitRock = true; break; }
     for (const j of sim.jets) {
       if (!j.alive || j.slot === jet.slot || sim.tick < j.invulnUntil) continue;
       const rr = j.mode === 'pilot' ? PILOT_R : JET_R;
@@ -325,6 +326,12 @@ function fireLaser(sim: SimState, jet: JetState, def: WeaponDef, ev: SimEvent[])
         break outer;
       }
     }
+  }
+  // Wiązka wypala skałę w punkcie trafienia — kolejny strzał w to samo
+  // miejsce drąży głębiej (jak w oryginale).
+  if (hitRock && def.carve > 0) {
+    const cells = carveCircle(sim.level, hitX, hitY, def.carve);
+    if (cells.length) ev.push({ t: 'terrain', cells });
   }
   ev.push({ t: 'laser', slot: jet.slot, x1: jet.x, y1: jet.y, x2: hitX, y2: hitY });
 }

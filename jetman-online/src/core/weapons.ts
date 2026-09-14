@@ -30,44 +30,44 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
   minigun: {
     id: 'minigun', name: 'MINIGUN',
     cooldownMs: 120, speed: 6, lifeMs: 800, gravity: 0.015,
-    damage: 6, pellets: 1, spread: 0.03, homing: 0, boomR: 0, carve: 4,
+    damage: 6, pellets: 1, spread: 0.03, homing: 0, boomR: 0, carve: 6,
     pilotOnly: false,
   },
   rocket: {
     id: 'rocket', name: 'RAKIETA',
     cooldownMs: 700, speed: 3.2, lifeMs: 2400, gravity: 0.01,
-    damage: 40, pellets: 1, spread: 0, homing: 0, boomR: 16, carve: 14,
+    damage: 40, pellets: 1, spread: 0, homing: 0, boomR: 16, carve: 16,
     pilotOnly: false,
   },
   shotgun: {
     id: 'shotgun', name: 'SHOTGUN',
     cooldownMs: 800, speed: 5, lifeMs: 380, gravity: 0.01,
-    damage: 7, pellets: 5, spread: 0.32, homing: 0, boomR: 0, carve: 3,
+    damage: 7, pellets: 5, spread: 0.32, homing: 0, boomR: 0, carve: 5,
     pilotOnly: false,
   },
   laser: {
     id: 'laser', name: 'LASER',
     cooldownMs: 500, speed: 0, lifeMs: 0, gravity: 0,
-    damage: 22, pellets: 1, spread: 0, homing: 0, boomR: 0, carve: 0,
+    damage: 22, pellets: 1, spread: 0, homing: 0, boomR: 0, carve: 6,
     pilotOnly: false,
   },
   mine: {
     id: 'mine', name: 'MINA',
     cooldownMs: 900, speed: 0, lifeMs: 20_000, gravity: 0,
-    damage: 60, pellets: 1, spread: 0, homing: 0, boomR: 18, carve: 16,
+    damage: 60, pellets: 1, spread: 0, homing: 0, boomR: 18, carve: 18,
     pilotOnly: false,
   },
   // --- uzbrojenie pilota (po bail-oucie, nie do wyboru w lobby) ---
   rifle: {
     id: 'rifle', name: 'KARABINEK',
     cooldownMs: 260, speed: 4.5, lifeMs: 700, gravity: 0.012,
-    damage: 8, pellets: 1, spread: 0.02, homing: 0, boomR: 0, carve: 4,
+    damage: 8, pellets: 1, spread: 0.02, homing: 0, boomR: 0, carve: 6,
     pilotOnly: true,
   },
   homing: {
     id: 'homing', name: 'RAKIETA SAMONAPR.',
     cooldownMs: 500, speed: 2.6, lifeMs: 2000, gravity: 0.008,
-    damage: 26, pellets: 1, spread: 0, homing: 0.055, boomR: 10, carve: 8,
+    damage: 26, pellets: 1, spread: 0, homing: 0.055, boomR: 10, carve: 10,
     pilotOnly: true,
   },
 };

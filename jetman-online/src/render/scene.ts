@@ -8,7 +8,7 @@
  */
 
 import { JET_R, TILE, VIEW_H, VIEW_W } from '../core/config';
-import { worldSize, type LevelData } from '../core/level';
+import { isSolid, worldSize, type LevelData } from '../core/level';
 import {
   ZONE_GLUE, ZONE_SNOW, ZONE_WATER, type SimState,
 } from '../core/types';
@@ -124,6 +124,58 @@ export function invalidateTerrain(level: LevelData, cells: number[]): void {
   }
 }
 
+// ---- Warstwa krwi (trwałe ślady po zabitych pilotach) ----
+
+const bloodCache = new WeakMap<LevelData, HTMLCanvasElement>();
+
+function bloodCanvas(level: LevelData): HTMLCanvasElement {
+  let cv = bloodCache.get(level);
+  if (cv) return cv;
+  const { w, h } = worldSize(level);
+  cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  bloodCache.set(level, cv);
+  return cv;
+}
+
+const BLOOD_COLORS = ['#d82800', '#a01414', '#6e0c0c'];
+
+/**
+ * Plama krwi po zabitym pilocie — zostaje na świecie do końca rundy
+ * (jak w oryginale). Część kropelek spada w dół i osadza się
+ * na pierwszej skale pod miejscem śmierci.
+ */
+export function splatBlood(level: LevelData, x: number, y: number): void {
+  const c = bloodCanvas(level).getContext('2d')!;
+  // Centralna plama — spłaszczony rozrzut wokół trafienia.
+  for (let i = 0; i < 18; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const d = Math.random() * 7;
+    c.fillStyle = BLOOD_COLORS[i % BLOOD_COLORS.length];
+    c.fillRect(
+      (x + Math.cos(a) * d) | 0,
+      (y + Math.sin(a) * d * 0.6) | 0,
+      i % 4 === 0 ? 2 : 1,
+      1,
+    );
+  }
+  // Kropelki spływają w dół — ślad na skale albo wisząca kropla.
+  for (let i = 0; i < 8; i++) {
+    const px = (x + (Math.random() - 0.5) * 12) | 0;
+    let py = y | 0;
+    const maxFall = 6 + Math.random() * 26;
+    for (let fell = 0; fell < maxFall && !isSolid(level, px, py + 1); fell++) py++;
+    c.fillStyle = BLOOD_COLORS[(Math.random() * BLOOD_COLORS.length) | 0];
+    c.fillRect(px, py, 1, 2);
+  }
+}
+
+/** Wyczyść warstwę krwi — wołane przy starcie nowej rundy. */
+export function clearBlood(level: LevelData): void {
+  const cv = bloodCache.get(level);
+  if (cv) cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height);
+}
+
 // ---- Scena ----
 
 export function drawScene(ctx: CanvasRenderingContext2D, sim: SimState, selfSlot: number): void {
@@ -161,6 +213,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, sim: SimState, selfSlot
   }
 
   ctx.drawImage(terrainCanvas(sim.level), -cam.x | 0, -cam.y | 0);
+  ctx.drawImage(bloodCanvas(sim.level), -cam.x | 0, -cam.y | 0);
   drawBases(ctx, sim);
   drawTethersAndFlags(ctx, sim);
   drawJets(ctx, sim, selfSlot);

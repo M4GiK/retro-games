@@ -14,7 +14,7 @@ import { createSim, stepSim } from './core/sim';
 import { LEVELS } from './core/level';
 import { TICK_MS } from './core/config';
 import { IN_RIGHT, IN_THRUST, type SimEvent, type SimState, ZONE_WATER } from './core/types';
-import { drawScene, invalidateTerrain, addShake } from './render/scene';
+import { drawScene, invalidateTerrain, addShake, splatBlood, clearBlood } from './render/scene';
 import { HostLoop } from './game/hostLoop';
 import { GuestLoop } from './game/guestLoop';
 import { Session } from './net/session';
@@ -60,6 +60,8 @@ function handleEvents(sim: SimState, ev: SimEvent[]): void {
       effects.terrainDebris(sim.level, e.cells);
     } else if (e.t === 'boom' || e.t === 'explode') {
       addShake(e.t === 'boom' ? 0.4 : 0.6);
+      // Śmierć pilota — krew zostaje na mapie do końca rundy.
+      if (e.t === 'explode') splatBlood(sim.level, e.x, e.y);
     } else if (e.t === 'zone' && e.zone === ZONE_WATER) {
       const j = sim.jets.find(jj => jj.slot === e.slot);
       if (j) effects.splash(j.x, j.y);
@@ -99,6 +101,7 @@ const sessionEvents = {
   onStart: (seed: number, level: number) => {
     menu.show('none');
     effects.clear();
+    clearBlood(LEVELS[level]);
     input.clear();
     playMusic('game');
     if (!session) return;
@@ -154,6 +157,7 @@ function leaveAll(): void {
 function startDemo(): void {
   menu.show('none');
   effects.clear();
+  clearBlood(LEVELS[menu.mapIdx()]);
   playMusic('game');
   const me = { name: 'TY', w1: menu.loadout()[0], w2: menu.loadout()[1] };
   const bot = { name: 'BOT', w1: 'minigun' as WeaponId, w2: 'rocket' as WeaponId };
