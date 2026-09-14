@@ -150,8 +150,10 @@ export class GuestLoop {
     }
 
     // Resztkowa rozbieżność → offset wygaszany w renderze.
-    this.offX += (before + this.offX) - this.self.x;
-    this.offY += (beforeY + this.offY) - this.self.y;
+    // Przypisanie (nie +=): offX ma wyrównać rysowaną pozycję do tej
+    // sprzed resetu, więc self.x + offX = before + stary offX.
+    this.offX = (before + this.offX) - this.self.x;
+    this.offY = (beforeY + this.offY) - this.self.y;
   }
 
   /** Predykcja: ten sam krok fizyki co host, na własnym jecie. */

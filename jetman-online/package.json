@@ -9,7 +9,8 @@
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "test:sim": "node test/run.mjs",
-    "test:net": "node test/net.mjs"
+    "test:net": "node test/net.mjs",
+    "test:guest": "node test/guest.mjs"
   },
   "dependencies": {
     "trystero": "0.25.4"

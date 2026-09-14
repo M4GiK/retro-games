@@ -27,7 +27,7 @@ jobs:
             jetman-online/package-lock.json
       - run: npm ci && npm run typecheck && npm run build
         working-directory: kurkarurka
-      - run: npm ci && npm run typecheck && npm run test:sim && npm run test:net && npm run build
+      - run: npm ci && npm run typecheck && npm run test:sim && npm run test:net && npm run test:guest && npm run build
         working-directory: jetman-online
         env:
           # Poświadczenia TURN (ICE servers JSON) — sekret repo, nie w kodzie.
