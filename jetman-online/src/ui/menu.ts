@@ -117,6 +117,8 @@ export class Menu {
 
   private submitCode(): void {
     if (this.code.length !== ROOM_CODE_LEN) { this.error('join', 'KOD MA 4 ZNAKI'); return; }
+    // Łączenie przez nostr+TURN trwa kilkanaście sekund — pokaż status.
+    this.error('join', 'ŁĄCZENIE…');
     const [w1, w2] = this.loadout();
     this.h.onJoin(this.code, w1, w2);
   }
@@ -149,6 +151,7 @@ export class Menu {
 
   /** Programowe dołączenie (deep-link ?room=KOD). */
   joinCode(code: string): void {
+    this.error('join', 'ŁĄCZENIE…');
     const [w1, w2] = this.loadout();
     this.h.onJoin(code.toUpperCase(), w1, w2);
   }

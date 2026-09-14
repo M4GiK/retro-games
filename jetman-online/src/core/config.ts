@@ -48,8 +48,13 @@ export const ROOM_CODE_LEN = 4;
 export const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 /** Id aplikacji dla trystero — wspólna przestrzeń nazw pokojów. */
 export const APP_ID = 'm4gik-jetman-online';
-/** Timeout (ms) oczekiwania gościa na odpowiedź hosta po dołączeniu. */
-export const JOIN_TIMEOUT_MS = 8000;
+/**
+ * Timeout (ms) oczekiwania gościa na odpowiedź hosta po dołączeniu.
+ * Musi przekraczać ICE timeout trystero (15 s): signaling nostr
+ * (announce→offer→answer przez relaye) + alokacja TURN + handshake
+ * DataChannel zajmują realnie 5-15 s na wolniejszych sieciach.
+ */
+export const JOIN_TIMEOUT_MS = 20000;
 
 // ---- TURN (przejście przez NAT) ----
 
