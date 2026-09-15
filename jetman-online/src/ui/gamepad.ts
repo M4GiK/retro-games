@@ -189,14 +189,28 @@ function ensureStyle(): void {
 .rpad[hidden]{display:none}
 .rp-dpad{position:relative;width:116px;height:116px;flex:none;
   pointer-events:auto;touch-action:none;
-  filter:drop-shadow(0 4px 0 rgba(0,0,0,.5))}
+  filter:drop-shadow(0 4px 0 rgba(0,0,0,.5));
+  transition:transform .06s ease-out}
+/* Krzyżak fizycznie przechyla się na centralnym bolcu w stronę
+   wciśniętego kierunku — jak plastikowy d-pad NES */
+.rp-dpad.u{transform:perspective(280px) rotateX(6deg)}
+.rp-dpad.d{transform:perspective(280px) rotateX(-6deg)}
+.rp-dpad.l{transform:perspective(280px) rotateY(-6deg)}
+.rp-dpad.r{transform:perspective(280px) rotateY(6deg)}
+.rp-dpad.u.l{transform:perspective(280px) rotateX(6deg) rotateY(-6deg)}
+.rp-dpad.u.r{transform:perspective(280px) rotateX(6deg) rotateY(6deg)}
+.rp-dpad.d.l{transform:perspective(280px) rotateX(-6deg) rotateY(-6deg)}
+.rp-dpad.d.r{transform:perspective(280px) rotateX(-6deg) rotateY(6deg)}
 .rp-dpad::before,.rp-dpad::after{content:'';position:absolute;
-  background:linear-gradient(180deg,#3a3a44,#17171f);border:2px solid #06060b}
+  background:linear-gradient(180deg,#3a3a44,#17171f);border:2px solid #06060b;
+  box-shadow:inset 0 2px 2px rgba(255,255,255,.14),
+    inset 0 -3px 4px rgba(0,0,0,.5)}
 .rp-dpad::before{left:33.5%;top:3%;width:33%;height:94%}
 .rp-dpad::after{left:3%;top:33.5%;width:94%;height:33%}
 .rp-dpad b{position:absolute;left:37%;top:37%;width:26%;height:26%;
   background:radial-gradient(circle at 40% 35%,#33333e,#15151c 70%);
-  border-radius:50%;pointer-events:none}
+  border-radius:50%;pointer-events:none;
+  box-shadow:inset 0 -2px 3px rgba(0,0,0,.6)}
 .rp-dpad i{position:absolute;display:flex;align-items:center;
   justify-content:center;font-style:normal;font-size:10px;color:#7f7f92;
   text-shadow:0 -1px 0 #000;pointer-events:none;border-radius:3px}
@@ -204,33 +218,43 @@ function ensureStyle(): void {
 .rp-dpad i.d{left:33.5%;bottom:4%;width:33%;height:28%}
 .rp-dpad i.l{left:4%;top:33.5%;width:28%;height:33%}
 .rp-dpad i.r{right:4%;top:33.5%;width:28%;height:33%}
+/* Wciśnięte ramię zapada się w obudowę + błysk */
 .rp-dpad.u i.u,.rp-dpad.d i.d,.rp-dpad.l i.l,.rp-dpad.r i.r{
-  color:#ffe6b0;background:rgba(255,190,74,.16)}
+  color:#ffe6b0;background:rgba(0,0,0,.5);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.85);
+  animation:rpPress .12s steps(2)}
 .rp-mid{display:flex;gap:8px;padding-bottom:8px;pointer-events:auto}
 .rp-pill{font-family:inherit;font-size:7px;letter-spacing:1px;
   color:#dadae4;background:linear-gradient(180deg,#4c4c58,#22222b);
   border:2px solid #08080d;border-radius:9px;padding:8px 13px;
-  box-shadow:0 3px 0 #08080d,inset 0 1px 0 #6a6a7a;text-shadow:0 -1px 0 #000;
-  cursor:pointer;touch-action:none}
-.rp-pill.on{transform:translateY(2px);
-  box-shadow:0 1px 0 #08080d,inset 0 1px 0 #6a6a7a}
+  box-shadow:0 3px 0 #08080d,inset 0 1px 0 #6a6a7a,
+    inset 0 -2px 0 rgba(0,0,0,.4);text-shadow:0 -1px 0 #000;
+  cursor:pointer;touch-action:none;transition:transform .05s ease-out}
+.rp-pill.on{transform:translateY(2px);animation:rpPress .12s steps(2);
+  box-shadow:0 1px 0 #08080d,inset 0 2px 4px rgba(0,0,0,.55)}
 .rp-btns{display:flex;gap:13px;align-items:flex-end;pointer-events:auto}
+/* A/B w czarnym gnieździe (pierścień jak w obudowie NES) + kopuła z
+   połyskiem; wciskanie zapada guzik w gniazdo i gasi rant */
 .rp-btn{width:56px;height:56px;border-radius:50%;cursor:pointer;
   border:2px solid #2c0606;font-family:inherit;font-size:12px;
   letter-spacing:1px;color:#ffd9c8;text-shadow:0 -1px 0 #500;
   background:radial-gradient(circle at 35% 30%,#ff7a62,#c81e14 62%,#7a0d08);
-  box-shadow:0 4px 0 #2c0606,inset 0 2px 2px rgba(255,255,255,.35);
-  touch-action:none}
+  box-shadow:0 0 0 5px #101018,0 5px 0 4px #05050a,
+    inset 0 3px 3px rgba(255,255,255,.4),inset 0 -4px 6px rgba(0,0,0,.45);
+  touch-action:none;transition:transform .05s ease-out}
 .rp-btn.a{transform:translateY(-13px)}
-.rp-btn.on{transform:translateY(3px);
+.rp-btn.on{transform:translateY(4px);animation:rpPress .12s steps(2);
   background:radial-gradient(circle at 35% 30%,#e0503f,#a01510 62%,#5e0a06);
-  box-shadow:0 1px 0 #2c0606,inset 0 2px 4px rgba(0,0,0,.45)}
-.rp-btn.a.on{transform:translateY(-10px)}
+  box-shadow:0 0 0 5px #101018,0 1px 0 4px #05050a,
+    inset 0 4px 7px rgba(0,0,0,.6)}
+.rp-btn.a.on{transform:translateY(-9px)}
+/* Błysk na wciśnięcie — steps(2) = szarpany retro-"klik" */
+@keyframes rpPress{0%{filter:brightness(1.55)}100%{filter:brightness(1)}}
 @media (max-height:460px){
   .rp-dpad{width:92px;height:92px}
   .rp-btn{width:46px;height:46px;font-size:10px}
   .rp-btn.a{transform:translateY(-10px)}
-  .rp-btn.a.on{transform:translateY(-7px)}
+  .rp-btn.a.on{transform:translateY(-6px)}
   .rp-mid{padding-bottom:5px}
   .rp-pill{font-size:6px;padding:6px 10px}
 }

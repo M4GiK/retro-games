@@ -8,10 +8,12 @@ const watch = process.argv.includes('--watch');
 const dev = watch || process.argv.includes('--dev');
 const outName = dev ? 'jetman-dev.html' : 'jetman.html';
 const MARKER = '<!-- GAME_BUNDLE -->';
-// Muzyka osadzana w pliku wynikowym (offline) — mp3 jako data URI, per ekran.
-const MUSIC_FILES = {
-  __MUSIC_SRC_MENU__: 'assets/Last_Frame_of_Glory.mp3',    // menu/lobby
-  __MUSIC_SRC_GAME__: 'assets/Thrusters_at_Maximum.mp3',   // runda
+// Assety osadzane w pliku wynikowym (offline) — marker → data URI.
+const INLINE_ASSETS = {
+  __MUSIC_SRC_MENU__: ['assets/Last_Frame_of_Glory.mp3', 'audio/mpeg'],   // menu/lobby
+  __MUSIC_SRC_GAME__: ['assets/Thrusters_at_Maximum.mp3', 'audio/mpeg'],  // runda
+  __PILOT_SPRITE__: ['assets/jetman.png', 'image/png'],                   // jetman w menu
+  __LOGO_IMG__: ['assets/logo.png', 'image/png'],                         // napis z okładki
 };
 
 // Poświadczenia TURN — NIE w repo. Źródła po kolei:
@@ -33,13 +35,12 @@ if (!turnIce) console.warn('[build] brak TURN (turn.secrets.json / TURN_ICE_SERV
 
 async function writeHtml(js) {
   let html = await readFile('src/index.html', 'utf8');
-  for (const [marker, file] of Object.entries(MUSIC_FILES)) {
+  for (const [marker, [file, mime]] of Object.entries(INLINE_ASSETS)) {
     let src = '';
     try {
-      const mp3 = await readFile(file);
-      src = 'data:audio/mpeg;base64,' + mp3.toString('base64');
+      src = `data:${mime};base64,` + (await readFile(file)).toString('base64');
     } catch {
-      console.warn(`[build] brak ${file} — gra wystartuje bez muzyki`);
+      console.warn(`[build] brak ${file} — marker ${marker} zostanie pusty`);
     }
     html = html.replace(marker, () => src);
   }

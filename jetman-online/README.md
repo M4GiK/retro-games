@@ -71,6 +71,9 @@ src/
   audio/       sfx — SimEvent → WebAudio (+ blipy UI, jingle splasha),
                music — mp3 z data URI: menu = Last Frame of Glory,
                runda = Thrusters at Maximum (assets/, markery w build.mjs)
+               jetman w menu = assets/jetman.png (marker __PILOT_SPRITE__),
+               napis w menu = assets/logo.png (marker __LOGO_IMG__) —
+               oba wycięte z covers/jetman.jpg przez tools/extract_cover.py
   index.html   szablon (markery <!-- GAME_BUNDLE -->, __MUSIC_SRC_*__)
   main.ts      boot + sklejanie modułów
 test/          headless testy core/ przez esbuild → node

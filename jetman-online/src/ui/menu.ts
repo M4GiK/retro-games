@@ -47,63 +47,6 @@ const KEY_ACTION: Record<string, PadAction> = {
   Escape: 'back',
 };
 
-// Popiersie pilota w rogu menu — wzór z okładki covers/jetman.jpg: biały
-// hełm z niebieskim pasem i wielkim wizjerem z cyjanowym odblaskiem,
-// pod nim szyja i pancerz ramion. Dół torsu ucina krawędź ekranu.
-const PILOT_HEAD = [
-  '..............WWWWWW..............',
-  '...........WWWWWWWWWWWW...........',
-  '.........WWWWLLLLLLLLWWWW.........',
-  '........WWLLWWWWWWWWWWLLWW........',
-  '.......WLWWWWWWWWWWWWWWWWLW.......',
-  '......WLWWWWWWWWWWWWWWWWWWLW......',
-  '.....WLWWWWWWWWWWWWWWWWWWWWLW.....',
-  '....WLWWWWWWWWWWWWWWWWWWWWWWLW....',
-  '....WAAAAAAAAAAAAAAAAAAAAAAAAW....',
-  '....DAAAAAAAAAAAAAAAAAAAAAAAAD....',
-  '....WLDDBBBBBBBBBBBBBBBBBBDDLW....',
-  '....WLDDBCCBBBBBBBBBBBBBBBDDLW....',
-  '....WLDDBBCCBBBBBBBBBBBBBBDDLW....',
-  '....WLDDBBBCCBBBBBBBVBBBBBDDLW....',
-  '....WLDDBBBBCCBBBBVVVVBBBBDDLW....',
-  '....WLDDBBBBBBBBBVVVVVVBBBDDLW....',
-  '....WLDDBBBBBBVVVVVVVVBBBBDDLW....',
-  '.....WDDDDDDDDDDDDDDDDDDDDDDW.....',
-  '.....WGLLLLLLLLLLLLLLLLLLLLGW.....',
-  '......GLLGLLGLLGLLGLLGLLGLLG......',
-  '.......DDDDDDDDDDDDDDDDDDDD.......',
-  '.....WWDDDDDDDDDDDDDDDDDDDDWW.....',
-  '...WLLLDDDDDDDDDDDDDDDDDDDDLLLW...',
-  '..GGWWWWWWWWWDAAAAAADWWWWWWWWWGG..',
-  '..GGWWWWWWWWWDAAAAAADWWWWWWWWWGG..',
-  '..DDDDDDDDDDDDDDDDDDDDDDDDDDDDDD..',
-  '.GGWWWWWWWWWWDAAAAAADWWWWWWWWWWGG.',
-  '.GGWWWWWWWWWWDAAAAAADWWWWWWWWWWGG.',
-  'GGWWWWWWWWWWWDVVVVAADWWWWWWWWWWWGG',
-  'GGWWWWWWWWWWWDAAAAAADWWWWWWWWWWWGG',
-  'GGWWWWWWWWWWWDAAAAAADWWWWWWWWWWWGG',
-  'GGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDGG',
-  'GGWWWWWWWWWWWDAAAAAADWWWWWWWWWWWGG',
-  'GGWWWWWWWWWWWDAAAAAADWWWWWWWWWWWGG',
-  'GGGWWWWWWWWWWDAAAAAADWWWWWWWWWWGGG',
-  'GGGWWWWWWWWWWDAAAAAADWWWWWWWWWWGGG',
-  'GGGWWWWWWWWWWDAAAAAADWWWWWWWWWWGGG',
-  'GGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDGGG',
-  'GGGWWWWWWWWWWDAAAAAADWWWWWWWWWWGGG',
-  'GGGWWWWWWWWWWDAAAAAADWWWWWWWWWWGGG',
-];
-
-const PAL_HEAD: Record<string, string> = {
-  W: '#f4f9ff',   // biel hełmu
-  L: '#b7c6de',   // jasny metal
-  G: '#66779a',   // cień metalu
-  D: '#1f2a44',   // obrys / rama wizjera
-  A: '#2f6fe4',   // niebieski pas i obramowanie wizjera
-  B: '#0d2b6e',   // wizjer
-  V: '#2a5fd0',   // wizjer — połysk
-  C: '#9fd8ff',   // odblask cyjan
-};
-
 export class Menu {
   /** Aktywny ekran — dispatch nawigacji działa poza grą ('none'). */
   private cur: ScreenId = 'none';
@@ -190,21 +133,6 @@ export class Menu {
         h.onLoadout(w1, w2);
       });
     }
-    this.drawPilotHead();
-  }
-
-  /** Rasteryzuje PILOT_HEAD na canvas w rogu menu (jak raster() w sprites.ts). */
-  private drawPilotHead(): void {
-    const c = (document.querySelector('#pilotHead') as HTMLCanvasElement)
-      .getContext('2d')!;
-    PILOT_HEAD.forEach((row, y) => {
-      for (let x = 0; x < row.length; x++) {
-        const col = PAL_HEAD[row[x]];
-        if (!col) continue;
-        c.fillStyle = col;
-        c.fillRect(x, y, 1, 1);
-      }
-    });
   }
 
   /** Wybrane bronie z selectów (w1, w2). */

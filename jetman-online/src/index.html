@@ -62,26 +62,24 @@ body.haspad{--padh:132px}
 .overlay[hidden]{display:none}
 h1{font-size:clamp(12px,3.4vw,17px);letter-spacing:2px;margin:0;color:#bcd9ff;
   text-shadow:2px 2px 0 #12275c,3px 3px 0 #000;line-height:1.4}
-/* Logo jak na okładce: metaliczna stal z niebieskim połyskiem */
-h1.logo{font-size:clamp(19px,6.5vw,32px);letter-spacing:1px;line-height:1;
-  background:linear-gradient(180deg,#f4fbff 0%,#b7d6f5 30%,#6ea3e0 47%,
-    #2557ab 53%,#123172 72%,#4d84d4 100%);
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
-  filter:drop-shadow(2px 2px 0 #04102e) drop-shadow(0 4px 0 rgba(2,6,20,.9))
-    drop-shadow(0 0 14px rgba(40,140,255,.4))}
-h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
-  text-transform:lowercase;-webkit-text-fill-color:#f4f8ff;
-  filter:drop-shadow(1px 1px 0 #f8720a) drop-shadow(2px 2px 0 #1a0800)}
+/* Logo — napis wycięty z okładki covers/jetman.jpg (assets/logo.png) */
+img.logo{width:min(92%,340px);height:auto;
+  filter:drop-shadow(0 3px 0 rgba(2,6,20,.85))
+    drop-shadow(0 0 16px rgba(40,140,255,.3))}
 .sub{font-size:8px;color:#8fb0d8;letter-spacing:2px;margin:0;line-height:1.8}
 .btn{border:2px solid #3a1500;background:linear-gradient(180deg,#ffbe4a,#f87d0a);
   color:#241000;font-family:inherit;font-size:10px;letter-spacing:2px;
   padding:14px 20px;cursor:pointer;min-width:210px;text-transform:uppercase;
-  box-shadow:0 3px 0 #3a1500,inset 0 1px 0 #ffe6b0}
-.btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffe6b0}
+  box-shadow:0 3px 0 #3a1500,inset 0 1px 0 #ffe6b0,inset 0 -3px 0 rgba(0,0,0,.28);
+  transition:transform .05s ease-out}
+.btn:active{transform:translateY(3px);animation:btnHit .12s steps(2);
+  box-shadow:0 0 0 #3a1500,inset 0 2px 4px rgba(0,0,0,.4)}
 .btn.ghost{background:linear-gradient(180deg,#2c4a86,#16264e);color:#cfe0f8;
-  border-color:#050a1c;box-shadow:0 3px 0 #050a1c,inset 0 1px 0 #5d84c8}
-.btn.ghost:active{box-shadow:inset 0 1px 0 #5d84c8}
+  border-color:#050a1c;box-shadow:0 3px 0 #050a1c,inset 0 1px 0 #5d84c8,
+    inset 0 -3px 0 rgba(0,0,0,.3)}
+.btn.ghost:active{box-shadow:0 0 0 #050a1c,inset 0 2px 4px rgba(0,0,0,.45)}
+/* Błysk przy wciśnięciu — steps(2) daje szarpany retro-"klik" */
+@keyframes btnHit{0%{filter:brightness(1.7)}100%{filter:brightness(1)}}
 .btn[disabled]{background:linear-gradient(180deg,#1c2a4e,#101a34);color:#5f7ca8;
   border-color:#050a1c;box-shadow:0 3px 0 #050a1c;cursor:default;transform:none}
 /* Menu główne — duże stalowe karty trybów jak na okładce;
@@ -91,7 +89,10 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
 #menuList li{font-size:clamp(11px,3vw,14px);color:#cfe0f8;padding:14px 18px;
   cursor:pointer;letter-spacing:2px;border:2px solid #050a1c;
   background:linear-gradient(180deg,#2c4a86,#16264e);
-  box-shadow:0 3px 0 #050a1c,inset 0 1px 0 #5d84c8}
+  box-shadow:0 3px 0 #050a1c,inset 0 1px 0 #5d84c8,inset 0 -3px 0 rgba(0,0,0,.3);
+  transition:transform .05s ease-out}
+#menuList li:active{transform:translateY(2px);animation:btnHit .12s steps(2);
+  box-shadow:0 1px 0 #050a1c,inset 0 2px 4px rgba(0,0,0,.4)}
 #menuList li small{display:block;font-size:7px;letter-spacing:1px;
   color:#8fb0d8;margin-top:7px}
 #menuList li.sel{color:#fff;border-color:#00e5ff;
@@ -134,15 +135,10 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
 @keyframes cometB{0%{left:70%;top:-6%;opacity:0}2%{opacity:1}
   16%{left:-8%;top:26%;opacity:1}19%{left:-12%;top:29%;opacity:0}
   100%{left:-12%;top:29%;opacity:0}}
-/* Popiersie pilota z okładki — wjeżdża z lewej przy pokazaniu menu
-   i dryfuje; dół torsu ucina krawędź ekranu (bottom:0) */
-#pilotHead{position:absolute;left:0;bottom:0;width:clamp(80px,26%,170px);
-  height:auto;animation:pilotIn .9s cubic-bezier(.3,1.35,.4,1) .45s both,
-    pilotBob 3.8s ease-in-out 1.7s infinite}
-@keyframes pilotIn{from{transform:translateX(-140%) rotate(-16deg)}
-  to{transform:translateX(0) rotate(-6deg)}}
-@keyframes pilotBob{0%,100%{transform:translateY(0) rotate(-6deg)}
-  50%{transform:translateY(-3px) rotate(-3deg)}}
+/* Jetman z flagą — wycięty z okładki (assets/jetman.png); stoi sztywno
+   w lewym dolnym rogu; wysokość skaluje się ze sceną do limitu */
+#pilotHead{position:absolute;left:0;bottom:0;height:clamp(170px,52%,400px);
+  width:auto}
 /* Ekran DOŁĄCZ — sloty kodu + klawiatura ekranowa (bez fizycznej);
    strzałki/pad jeżdżą po siatce klawiszy (fokus .foc) */
 .slots{display:flex;gap:9px}
@@ -155,8 +151,10 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
 .pad{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;width:min(304px,94%)}
 .key{font-family:inherit;font-size:clamp(9px,2.2vw,11px);padding:11px 0;
   cursor:pointer;color:#cfe0f8;background:linear-gradient(180deg,#2c4a86,#16264e);
-  border:2px solid #050a1c;box-shadow:0 2px 0 #050a1c,inset 0 1px 0 #5d84c8}
-.key:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #5d84c8}
+  border:2px solid #050a1c;box-shadow:0 2px 0 #050a1c,inset 0 1px 0 #5d84c8,
+    inset 0 -2px 0 rgba(0,0,0,.3);transition:transform .05s ease-out}
+.key:active{transform:translateY(2px);animation:btnHit .12s steps(2);
+  box-shadow:0 0 0 #050a1c,inset 0 2px 4px rgba(0,0,0,.45)}
 .row{display:flex;gap:9px;width:min(320px,96%)}
 .row .btn{min-width:0;padding:14px 8px;flex:1}
 .codebox{font-size:18px;letter-spacing:9px;color:#ffbe4a;border:3px dashed #3a5fae;
@@ -183,7 +181,7 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
 @container (max-height:460px){
   .overlay{gap:9px;padding:10px}
   h1{font-size:clamp(11px,4cqh,15px)}
-  h1.logo{font-size:clamp(17px,8cqh,26px)}
+  img.logo{width:min(88%,290px)}
   .sub{font-size:7px}
   #menuList{gap:9px;width:min(280px,92%)}
   #menuList li{font-size:clamp(10px,3.6cqh,13px);padding:11px 15px}
@@ -203,7 +201,7 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
   .plist .wpn{font-size:7px}
   .selrow{font-size:7px;gap:7px}
   .selrow select{font-size:8px;padding:5px}
-  #pilotHead{width:clamp(40px,14%,56px)}
+  #pilotHead{height:clamp(120px,42%,210px)}
 }
 @container (max-height:360px){
   .overlay{gap:7px;padding:8px}
@@ -237,9 +235,9 @@ h1.logo span{display:block;font-size:.38em;letter-spacing:6px;margin-top:7px;
       <i class="st a"></i><i class="st b"></i><i class="st c"></i>
       <i class="spark s1"></i><i class="spark s2"></i>
       <i class="comet c1"></i><i class="comet c2"></i>
-      <canvas id="pilotHead" width="34" height="40"></canvas>
+      <img id="pilotHead" src="__PILOT_SPRITE__" alt="">
     </div>
-    <h1 class="logo">JETMAN<span>online</span></h1>
+    <img class="logo" src="__LOGO_IMG__" alt="JETMAN online">
     <p class="sub">POJEDYNEK NA JETPACKACH · 2–4 GRACZY</p>
     <ul id="menuList">
       <li class="sel">STWÓRZ POKÓJ<small>HOSTUJ GRĘ · PODAJ KOD ZNAJOMYM</small></li>
