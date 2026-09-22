@@ -97,7 +97,7 @@ export class SceneRenderer {
     const adventure = gameState.mode === 'normal' && grounds.length > 0;
     const wideWorld = adventure || gameState.mode === 'hard' || levelState.bossArena;
     const camX = wideWorld
-      ? Math.max(0, Math.min(physics.player.position.x - 90, levelState.len - w))
+      ? Math.max(0, Math.min(physics.renderPos(physics.player).x - 90, levelState.len - w))
       : 0;
     ctx.clearRect(0, 0, w, h);
 
@@ -174,9 +174,10 @@ export class SceneRenderer {
     // Cząsteczki — kwadratowe piksele
     for (const p of particles) {
       const r = Math.max(1, Math.round((p.body.circleRadius || 2) * p.life));
+      const pp = physics.renderPos(p.body);
       ctx.fillStyle = shade(p.color === '#dust' ? this.C.dust : p.color, this.dl);
       ctx.globalAlpha = Math.max(0, p.life);
-      ctx.fillRect(Math.round(p.body.position.x) - r, Math.round(p.body.position.y) - r, r * 2, r * 2);
+      ctx.fillRect(Math.round(pp.x) - r, Math.round(pp.y) - r, r * 2, r * 2);
       ctx.globalAlpha = 1;
     }
 
@@ -194,7 +195,8 @@ export class SceneRenderer {
 
     // Wizualizacja aktywnych efektów (pikselowe obramowania)
     if (activeEffects.shield > 0) {
-      const px = Math.round(physics.player.position.x), py = Math.round(physics.player.position.y);
+      const pp = physics.renderPos(physics.player);
+      const px = Math.round(pp.x), py = Math.round(pp.y);
       ctx.fillStyle = '#3cbcfc';
       const blink = Math.sin(ts * 0.02) > 0;
       if (blink) {
@@ -207,7 +209,8 @@ export class SceneRenderer {
     }
     if (activeEffects.magnet > 0) {
       ctx.fillStyle = '#f83800';
-      const px = Math.round(physics.player.position.x), py = Math.round(physics.player.position.y);
+      const pp = physics.renderPos(physics.player);
+      const px = Math.round(pp.x), py = Math.round(pp.y);
       const r = 34;
       for (const [cx, cy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
         ctx.fillRect(px + cx * r - 2, py + cy * r - 2, 4, 1);
@@ -431,12 +434,13 @@ export class SceneRenderer {
     const pal: Palette = golden
       ? shadePal({ W: '#f8d800', S: '#b08800' }, this.dl)
       : shadePal({ W: PAL.white, S: '#c8c8c8' }, this.dl);
-    drawSprite(ctx, EGG, pal, e.position.x, e.position.y, 2);
+    const pos = physics.renderPos(e);
+    drawSprite(ctx, EGG, pal, pos.x, pos.y, 2);
     if (golden) {
       // błysk złotego jajka
       if (Math.sin(now() * 0.01) > 0) {
         ctx.fillStyle = this.C.white;
-        ctx.fillRect(Math.round(e.position.x) + 8, Math.round(e.position.y) - 10, 2, 2);
+        ctx.fillRect(Math.round(pos.x) + 8, Math.round(pos.y) - 10, 2, 2);
       }
     }
   }
@@ -454,8 +458,9 @@ export class SceneRenderer {
     const fur = telegraph && Math.floor(now() / 90) % 2 === 0 ? '#fcfcfc' : d.color;
     const pal: Palette = { ...shadePal(FOX_PAL, this.dl), D: shade(fur, this.dl) };
 
-    const x = Math.round(e.position.x);
-    const y = Math.round(e.position.y) + bob;
+    const pos = physics.renderPos(e);
+    const x = Math.round(pos.x);
+    const y = Math.round(pos.y) + bob;
     drawSprite(ctx, FOX, pal, x, y, px, d.facing > 0);
 
     // Nogi — animacja 2-klatkowa
@@ -511,8 +516,9 @@ export class SceneRenderer {
    */
   private drawChicken(ctx: CanvasRenderingContext2D, p: Matter.Body): void {
     const d = p.gameData as PlayerData;
-    const x = Math.round(p.position.x);
-    const y = Math.round(p.position.y);
+    const pos = physics.renderPos(p);
+    const x = Math.round(pos.x);
+    const y = Math.round(pos.y);
     const flip = d.facing < 0;
 
     drawSprite(ctx, CHICKEN, shadePal(CHICKEN_PAL, this.dl), x, y, 2, flip);
@@ -564,22 +570,24 @@ export class SceneRenderer {
   /** Przeszkoda spadająca: ptak z machaniem skrzydeł, pająk albo kamień. */
   private drawFalling(ctx: CanvasRenderingContext2D, o: Matter.Body): void {
     const d = o.gameData as FallingData;
+    const pos = physics.renderPos(o);
     if (d.type === 'bird') {
       const flap = Math.sin(now() * 0.02) > 0 ? -2 : 0;
-      drawSprite(ctx, BIRD, shadePal(BIRD_PAL, this.dl), o.position.x, o.position.y + flap, 2);
+      drawSprite(ctx, BIRD, shadePal(BIRD_PAL, this.dl), pos.x, pos.y + flap, 2);
     } else if (d.type === 'spider') {
-      drawSprite(ctx, SPIDER, shadePal(SPIDER_PAL, this.dl), o.position.x, o.position.y, 2);
+      drawSprite(ctx, SPIDER, shadePal(SPIDER_PAL, this.dl), pos.x, pos.y, 2);
     } else {
-      drawSprite(ctx, ROCK, shadePal(ROCK_PAL, this.dl), o.position.x, o.position.y, 2);
+      drawSprite(ctx, ROCK, shadePal(ROCK_PAL, this.dl), pos.x, pos.y, 2);
     }
   }
 
   /** Kulka bonusu w kolorze typu + glif w środku; lekko pulsuje w pionie. */
   private drawPowerup(ctx: CanvasRenderingContext2D, p: Matter.Body): void {
     const t = (p.gameData as PowerupData).type;
+    const pos = physics.renderPos(p);
     const pulse = Math.sin(now() * 0.008) > 0 ? 2 : 0;
-    drawSprite(ctx, ORB, { P: POWERUP_COLORS[t] }, p.position.x, p.position.y + pulse, 1);
+    drawSprite(ctx, ORB, { P: POWERUP_COLORS[t] }, pos.x, pos.y + pulse, 1);
     // glif w środku (orb 12px, glif 5px -> offset na środek)
-    drawSprite(ctx, POWERUP_GLYPHS[t], { X: '#101018' }, p.position.x, p.position.y + pulse, 1);
+    drawSprite(ctx, POWERUP_GLYPHS[t], { X: '#101018' }, pos.x, pos.y + pulse, 1);
   }
 }

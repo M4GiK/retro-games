@@ -30,6 +30,13 @@ export class PhysicsEngine {
   engine!: Matter.Engine;
   /** Renderer Matter — dostarcza canvas 256×240 w #stage; sprite'y i tak rysuje SceneRenderer. */
   render!: Matter.Render;
+  /**
+   * Ułamek kroku fizyki, który upłynął od ostatniego update'u (0–1).
+   * Faza interpolacji renderingu — patrz renderPos().
+   */
+  alpha = 0;
+  /** Pozycje ciał sprzed ostatniego kroku fizyki — baza lerp w renderPos(). */
+  private prevPos = new WeakMap<Matter.Body, { x: number; y: number }>();
 
   /** Ciało gracza (kurka). */
   player!: Matter.Body;
@@ -92,11 +99,31 @@ export class PhysicsEngine {
       if (last !== undefined) acc += Math.min(time - last, MAX_FRAME_MS);
       last = time;
       while (acc >= STEP) {
+        // Snapshot przed krokiem — renderer lerp'uje prev -> position o alpha.
+        for (const b of Composite.allBodies(this.engine.world)) {
+          if (!b.isStatic) this.prevPos.set(b, { x: b.position.x, y: b.position.y });
+        }
         Engine.update(this.engine, STEP);
         acc -= STEP;
       }
+      this.alpha = acc / STEP;
     };
     requestAnimationFrame(loop);
+  }
+
+  /**
+   * Pozycja ciała do narysowania — interpolacja między stanem sprzed
+   * i po ostatnim kroku fizyki (o ułamek `alpha`). Stały krok 60 Hz
+   * kwantuje ruch, a klatki dostają nieregularnie 0–2 kroki; lerp
+   * przywraca płynny ruch niezależnie od odświeżania ekranu.
+   */
+  renderPos(body: Matter.Body): { x: number; y: number } {
+    const prev = this.prevPos.get(body);
+    if (!prev) return body.position;
+    return {
+      x: prev.x + (body.position.x - prev.x) * this.alpha,
+      y: prev.y + (body.position.y - prev.y) * this.alpha,
+    };
   }
 
   /**
