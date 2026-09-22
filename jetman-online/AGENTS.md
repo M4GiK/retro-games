@@ -53,10 +53,11 @@ Zasada: jeden agent = jeden ticket = własne pliki. Pliki z kolumny
 ```
 menu.ts → Session.create/join (lobby, sloty 0-3, loadout w1/w2)
         → host START → 'start' {seed, level}
-host:   HostLoop  — setInterval TICK_MS → stepSim(sim, inputs)
+host:   HostLoop  — akumulator na setInterval(TICK_MS) → stepSim(sim, inputs)
                   → co 3. tick 'snap' {Snap{ack}, ev} broadcast
-guest:  GuestLoop — 'input' 30 Hz → host; 'snap' → reset do autorytetu
-                  → replay niepotwierdzonych inputów (seq > ack)
+guest:  GuestLoop — akumulator na rAF (stały krok, nie fps!) → 'input' 30 Hz
+                  → host; 'snap' → reset do autorytetu
+                  → replay niepotwierdzonych inputów (seq > ack) ×INPUT_EVERY
                   → interp cudzych jetów z adaptacyjnym delay
 render: rAF → drawScene(SimState, kamera) + effects(SimEvent) + drawHud
         'terrain' events → invalidateTerrain (dziury w warstwie mapy)

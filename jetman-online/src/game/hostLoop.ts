@@ -1,7 +1,7 @@
 /**
  * Pętla hosta — autorytetna symulacja + rozsyłanie snapshotów.
  *
- * setInterval co TICK_MS: zbiera inputy (własny z klawiatury, gości
+ * Akumulator na setInterval(TICK_MS): zbiera inputy (własny z klawiatury, gości
  * z ostatnich wiadomości 'input'), stepSim, co SNAPSHOT_EVERY ticków
  * broadcast snapshotu ze zdarzeniami (dźwięki/efekty/diffy terenu gości)
  * i `ack` — najwyższym odebranym seq inputu per slot — gość odtwarza
@@ -30,6 +30,9 @@ export class HostLoop {
   private lastSeq: number[] = [];
   private pending: SimEvent[] = [];
   private timer = 0;
+  /** Akumulator czasu — opóźniony timer nadgania zaległe ticki. */
+  private acc = 0;
+  private lastAt = 0;
 
   constructor(
     private readonly session: Session,
@@ -64,7 +67,19 @@ export class HostLoop {
   }
 
   start(): void {
-    this.timer = setInterval(() => this.tick(), TICK_MS) as unknown as number;
+    this.lastAt = performance.now();
+    this.timer = setInterval(() => {
+      const now = performance.now();
+      this.acc += now - this.lastAt;
+      this.lastAt = now;
+      // Bez sufitu zamrożona karta wystrzeliłaby setki ticków naraz.
+      if (this.acc > 250) this.acc = 250;
+      while (this.acc >= TICK_MS) {
+        this.acc -= TICK_MS;
+        this.tick();
+        if (this.sim.phase === 'over') break;
+      }
+    }, TICK_MS) as unknown as number;
   }
 
   stop(): void {

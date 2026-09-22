@@ -42,7 +42,10 @@ export class GuestLoop {
   /** EMA odstępu między snapshotami → adaptacyjny interp delay. */
   private snapInterval = SNAPSHOT_MS_EST;
   private seq = 0;
-  private lastInputAt = 0;
+  /** Akumulator czasu — stały krok predykcji niezależnie od fps. */
+  private acc = 0;
+  private lastFrameAt = -1;
+  private predTick = 0;
   /** Wysłane, niepotwierdzone inputy (seq, bits, czas wysłania). */
   private inputQueue: { seq: number; bits: number; at: number }[] = [];
   /** Predykowany własny jet + błąd względem autorytetu. */
@@ -98,10 +101,27 @@ export class GuestLoop {
     }
   }
 
-  /** Wołaj co rAF: wysyłka inputu + predykcja + składanie widoku. */
+  /** Wołaj co rAF: stały krok predykcji (akumulator) + składanie widoku. */
   frame(now: number): void {
-    if (now - this.lastInputAt >= INPUT_EVERY * TICK_MS) {
-      this.lastInputAt = now;
+    if (this.lastFrameAt < 0) this.lastFrameAt = now;
+    this.acc += now - this.lastFrameAt;
+    this.lastFrameAt = now;
+    // Zamrożona karta nie nadgania sekund naraz — sufit przeciw lawinie.
+    if (this.acc > 250) this.acc = 250;
+    while (this.acc >= TICK_MS) {
+      this.acc -= TICK_MS;
+      this.step(now);
+    }
+    this.buildView(now);
+  }
+
+  /**
+   * Jeden tick predykcji. Input leci co INPUT_EVERY ticków (30 Hz) —
+   * host aplikuje każdy aż do kolejnego, więc jeden input ≈ INPUT_EVERY
+   * ticków na hoście (to samo założenie ma replay w reconcile()).
+   */
+  private step(now: number): void {
+    if (this.predTick++ % INPUT_EVERY === 0) {
       const bits = this.ownBits();
       this.inputQueue.push({ seq: this.seq, bits, at: now });
       this.session.send(
@@ -110,7 +130,6 @@ export class GuestLoop {
       );
     }
     this.predictSelf();
-    this.buildView(now);
   }
 
   // ---- wnętrze ----
@@ -144,9 +163,14 @@ export class GuestLoop {
     this.inputQueue = this.inputQueue.filter(i => i.seq > ack && i.at > cutoff);
     for (const i of this.inputQueue) {
       this.self.lastBits = i.bits;
-      steerJet(this.self, i.bits);
-      accelerateJet(this.level, this.self);
-      moveJet(this.level, this.self);
+      // Host widzi każdy input przez ~INPUT_EVERY ticków (30 Hz → 60 Hz),
+      // replay musi pokryć tyle samo kroków, inaczej jet systematycznie
+      // zostaje w tyle i offX/offY wciąga stały błąd.
+      for (let n = 0; n < INPUT_EVERY; n++) {
+        steerJet(this.self, i.bits);
+        accelerateJet(this.level, this.self);
+        moveJet(this.level, this.self);
+      }
     }
 
     // Resztkowa rozbieżność → offset wygaszany w renderze.
