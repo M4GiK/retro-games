@@ -2,7 +2,7 @@
  * Rdzeń fizyki świata gry.
  *
  * Klasa PhysicsEngine jest fasadą (wzorzec Façade) nad Matter.js:
- * ukrywa ceremonię tworzenia silnika, renderera i runnera oraz jest
+ * ukrywa ceremonię tworzenia silnika, renderera i pętli gry oraz jest
  * właścicielem ciał stałych świata (gracz, ziemia, ściany boczne).
  * Eksportowana instancja `physics` pełni rolę singletona — rejestru
  * świata fizycznego, do którego odwołują się pozostałe systemy.
@@ -15,15 +15,21 @@ import { GROUND_H, VIEW_W, VIEW_H, W, H } from '../core/config';
 import { eggs, enemies, fallingObstacles, powerups, particles, popups, grounds, platforms } from '../core/state';
 import type { PlayerData } from '../core/types';
 
-const { Engine, Render, Runner, Bodies, Composite, Body } = Matter;
+const { Engine, Render, Bodies, Composite, Body } = Matter;
+
+/** Stały krok fizyki: 60 Hz niezależnie od częstotliwości odświeżania ekranu. */
+const STEP = 1000 / 60;
+/**
+ * Maksymalny czas rzeczywisty nadrabiany w jednej klatce — przy dłuższym
+ * lagach gra po prostu zwolni, zamiast wpaść w spiralę kroków fizyki.
+ */
+const MAX_FRAME_MS = 250;
 
 export class PhysicsEngine {
   /** Silnik fizyki Matter (integracja, broadphase, solver kolizji). */
   engine!: Matter.Engine;
   /** Renderer Matter — dostarcza canvas 256×240 w #stage; sprite'y i tak rysuje SceneRenderer. */
   render!: Matter.Render;
-  /** Pętla runnera ze stałym krokiem czasowym 60 Hz (deterministyczna fizyka). */
-  runner!: Matter.Runner;
 
   /** Ciało gracza (kurka). */
   player!: Matter.Body;
@@ -43,9 +49,9 @@ export class PhysicsEngine {
   }
 
   /**
-   * Tworzy silnik Matter, renderer (canvas 256×240 w #stage) i runner
-   * ze stałym krokiem 60 FPS. Zwiększone iteracje solvera = stabilniejsze
-   * stosy ciał przy gwałtownych kolizjach.
+   * Tworzy silnik Matter, renderer (canvas 256×240 w #stage) i startuje
+   * pętlę gry ze stałym krokiem 60 Hz. Zwiększone iteracje solvera =
+   * stabilniejsze stosy ciał przy gwałtownych kolizjach.
    */
   init(stage: HTMLElement): void {
     const engine = Engine.create({ enableSleeping: false });
@@ -66,12 +72,31 @@ export class PhysicsEngine {
       },
     });
 
-    this.runner = Runner.create();
-    this.runner.isFixed = true;
-    this.runner.delta = 1000 / 60;
-
     Render.run(this.render);
-    Runner.run(this.runner, engine);
+    this.startLoop();
+  }
+
+  /**
+   * Pętla gry z akumulatorem czasu. Matter.Runner przy isFixed robił jeden
+   * krok na każdy requestAnimationFrame — na ekranach >60 Hz (albo przy
+   * rAF bez limitu vsync) gra przyspieszała proporcjonalnie do fps.
+   * Akumulator liczy realny czas między klatkami i wykonuje tyle kroków
+   * STEP, ile faktycznie upłynęło, więc tempo gry jest stałe wszędzie.
+   * Pauza działa dalej przez timeScale=0 — kroki lecą, ale zegar silnika stoi.
+   */
+  private startLoop(): void {
+    let last: number | undefined;
+    let acc = 0;
+    const loop = (time: number) => {
+      requestAnimationFrame(loop);
+      if (last !== undefined) acc += Math.min(time - last, MAX_FRAME_MS);
+      last = time;
+      while (acc >= STEP) {
+        Engine.update(this.engine, STEP);
+        acc -= STEP;
+      }
+    };
+    requestAnimationFrame(loop);
   }
 
   /**
